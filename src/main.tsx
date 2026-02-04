@@ -13,6 +13,8 @@ import { LoginChecker } from "./Helpers/LoginChecker";
 
 // import { States } from "./Pages/States";
 import NotFoundPage from "./Components/NotFound";
+import { Signup } from "./Pages/Signup";
+import { ForgotPassword } from "./Pages/ForgotPassword";
 
 
 const router = createBrowserRouter([
@@ -102,14 +104,30 @@ const router = createBrowserRouter([
 
     // ],
   },
-  {
-    path: "/login",
-    element: (
-      <LoginChecker allowedUser="not-logged-in">
-        <ErrorBoundary><Login /></ErrorBoundary>
-      </LoginChecker>
-    ),
-  },
+    {
+      path: "/login",
+      element: (
+        <LoginChecker allowedUser="not-logged-in">
+          <ErrorBoundary><Login /></ErrorBoundary>
+        </LoginChecker>
+      ),
+    },
+    {
+      path: "/signup",
+      element: (
+        <LoginChecker allowedUser="not-logged-in">
+          <ErrorBoundary><Signup /></ErrorBoundary>
+        </LoginChecker>
+      ),
+    },
+    {
+      path: "/forgot-password",
+      element: (
+        <LoginChecker allowedUser="not-logged-in">
+          <ErrorBoundary><ForgotPassword /></ErrorBoundary>
+        </LoginChecker>
+      ),
+    },
   {
     path: "*",
     element: <ErrorBoundary><NotFoundPage /></ErrorBoundary>
