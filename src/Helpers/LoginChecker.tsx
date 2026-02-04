@@ -13,6 +13,7 @@ export function LoginChecker({ children, allowedUser }: LoginCheckerProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const hasChecked = useRef<string | null>(null);
+  const isChecking = useRef(false); // Prevent concurrent checks
 
   useEffect(() => {
     // Prevent multiple calls for the same pathname
@@ -21,36 +22,47 @@ export function LoginChecker({ children, allowedUser }: LoginCheckerProps) {
       return;
     }
     
+    // Prevent concurrent checks
+    if (isChecking.current) {
+      return;
+    }
+    
     // Reset loading state when pathname changes
     setIsLoading(true);
     
     const checkAuth = async () => {
+      // Skip if already checking
+      if (isChecking.current) return;
+      
+      isChecking.current = true;
       hasChecked.current = location.pathname;
       
       try {
         await api.get("/auth/validate-token");
         
-        // User is logged in
+        // User IS logged in
         if (allowedUser === "not-logged-in") {
-          if (location.pathname !== "/") {
-            navigate("/", { replace: true });
-          } else {
-            setIsLoading(false);
-          }
+          // Logged-in user trying to access not-logged-in page → redirect to dashboard
+          navigate("/", { replace: true });
         } else {
+          // Logged-in user accessing logged-in page → allow access
           setIsLoading(false);
         }
-      } catch {
+      } catch (error: any) {
         // User is NOT logged in
         if (allowedUser === "logged-in") {
+          // Not logged-in user trying to access logged-in page → redirect to login
           if (location.pathname !== "/login") {
             navigate("/login", { replace: true });
           } else {
             setIsLoading(false);
           }
         } else {
+          // Not logged-in user accessing not-logged-in page → allow access
           setIsLoading(false);
         }
+      } finally {
+        isChecking.current = false;
       }
     };
 
