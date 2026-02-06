@@ -26,7 +26,11 @@ export function Login() {
       setAccessToken(access_token);
       
       localStorage.setItem('user', JSON.stringify(user));
-      window.location.href = '/dashboard';
+      if (user?.role) {
+        localStorage.setItem("role", String(user.role));
+      }
+
+      window.location.href = user?.role === "admin" ? "/admin/dashboard" : "/dashboard";
     } catch (err: any) {
       setError(
         err.response?.data?.message || 
@@ -55,7 +59,7 @@ export function Login() {
               <MessageCircle className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-white">Omni<span className="text-primary-200">Connect</span></h1>
+              <h1 className="text-3xl font-bold text-white">Brand<span className="text-primary-200">Mize</span></h1>
               <p className="text-primary-100 text-sm mt-1">Professional Communication Suite</p>
             </div>
           </div>
@@ -64,11 +68,10 @@ export function Login() {
           <div className="max-w-lg">
             <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6 border border-white/20">
               <Zap className="w-4 h-4 text-white" />
-              <span className="text-white text-sm font-medium">AI-Powered Omnichannel Platform</span>
+              <span className="text-white text-sm font-medium">AI-Powered Brandchannel Platform</span>
             </div>
             
             <h2 className="text-4xl font-bold text-white mb-6 leading-tight">
-              Connect every channel.
               <br />
               <span className="text-primary-200">Deliver amazing support.</span>
             </h2>
@@ -124,7 +127,7 @@ export function Login() {
               <MessageCircle className="w-8 h-8 text-white" />
             </div>
             <div className="ml-4">
-              <h1 className="text-2xl font-bold text-gray-900">OmniConnect</h1>
+              <h1 className="text-2xl font-bold text-gray-900">BrandMize</h1>
               <p className="text-gray-600 text-sm">Agent Portal</p>
             </div>
           </div>
@@ -336,7 +339,7 @@ export function Login() {
               <button className="hover:text-gray-700 transition">Status</button>
             </div>
             <div className="mt-4 text-center text-xs text-gray-400">
-              <p>© {new Date().getFullYear()} OmniConnect Inc. All rights reserved.</p>
+              <p>© {new Date().getFullYear()} BrandMize Inc. All rights reserved.</p>
             </div>
           </div>
         </div>

@@ -178,7 +178,7 @@ export function ForgotPassword() {
               <Key className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-white">Omni<span className="text-primary-200">Connect</span></h1>
+              <h1 className="text-3xl font-bold text-white">Brand<span className="text-primary-200">Mize</span></h1>
               <p className="text-primary-100 text-sm mt-1">Account Security</p>
             </div>
           </div>
@@ -563,7 +563,7 @@ export function ForgotPassword() {
             </div>
             <div className="mt-4 text-center text-xs text-gray-400">
               <p>Need help? Our support team is available 24/7</p>
-              <p className="mt-1">© {new Date().getFullYear()} OmniConnect Inc. All rights reserved.</p>
+              <p className="mt-1">© {new Date().getFullYear()} BrandMize Inc. All rights reserved.</p>
             </div>
           </div>
         </div>

@@ -122,7 +122,7 @@ export function Signup() {
       setSuccess(true);
       
       // Auto login after successful signup
-      const loginResponse = await api.post('/auth/singin', {
+      const loginResponse = await api.post('/auth/signin', {
         email,
         password,
       });
@@ -130,16 +130,19 @@ export function Signup() {
       const { access_token, user } = loginResponse.data;
       setAccessToken(access_token);
       localStorage.setItem('user', JSON.stringify(user));
+      if (user?.role) {
+        localStorage.setItem("role", String(user.role));
+      }
 
-      // Redirect to onboarding after 2 seconds
+      // Redirect after 2 seconds
       setTimeout(() => {
-        window.location.href = '/onboarding';
+        window.location.href = user?.role === "admin" ? "/admin/dashboard" : "/dashboard";
       }, 2000);
 
     } catch (err: any) {
       setError(
         err.response?.data?.message || 
-        err.response?.data?.error || 
+        err.response?.data?.detail || 
         'Something went wrong. Please try again.'
       );
     } finally {
@@ -164,7 +167,7 @@ export function Signup() {
               <MessageCircle className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-white">Omni<span className="text-primary-200">Connect</span></h1>
+              <h1 className="text-3xl font-bold text-white">Brand<span className="text-primary-200">Mize</span></h1>
               <p className="text-primary-100 text-sm mt-1">Professional Communication Suite</p>
             </div>
           </div>
@@ -209,7 +212,7 @@ export function Signup() {
             <div className="flex items-start space-x-4">
               <div className="flex-1">
                 <p className="text-white/90 italic mb-3">
-                  "OmniConnect transformed our support operations. Response times improved by 60% and customer satisfaction skyrocketed."
+                  "BrandMize transformed our support operations. Response times improved by 60% and customer satisfaction skyrocketed."
                 </p>
                 <div className="flex items-center">
                   <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center font-bold text-white">
@@ -574,7 +577,7 @@ export function Signup() {
             </div>
             <div className="mt-4 text-center text-xs text-gray-400">
               <p>14-day free trial • No credit card required • Cancel anytime</p>
-              <p className="mt-1">© {new Date().getFullYear()} OmniConnect Inc. All rights reserved.</p>
+              <p className="mt-1">© {new Date().getFullYear()} BrandMize Inc. All rights reserved.</p>
             </div>
           </div>
         </div>

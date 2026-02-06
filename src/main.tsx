@@ -15,6 +15,10 @@ import { LoginChecker } from "./Helpers/LoginChecker";
 import NotFoundPage from "./Components/NotFound";
 import { Signup } from "./Pages/Signup";
 import { ForgotPassword } from "./Pages/ForgotPassword";
+import { PanelLayout } from "./Components/PanelLayout";
+import { AdminPanelLayout } from "./Components/admin/AdminPanelLayout";
+import { AdminDashboard } from "./Pages/admin/Dashboard";
+import { Profile } from "./Pages/Profile";
 
 
 const router = createBrowserRouter([
@@ -22,9 +26,19 @@ const router = createBrowserRouter([
     path: "/",
     element: (
       <LoginChecker allowedUser="logged-in">
-          <ErrorBoundary><Dashboard /></ErrorBoundary>
+          <ErrorBoundary><PanelLayout /></ErrorBoundary>
       </LoginChecker>
     ),
+    children: [
+      {
+        path: "dashboard",
+        element: <ErrorBoundary><Dashboard /></ErrorBoundary>,
+      },
+      {
+        path: "profile",
+        element: <ErrorBoundary><Profile /></ErrorBoundary>,
+      },
+    ]
     // children: [
     //   {
     //     path: "dashboard",
@@ -103,6 +117,20 @@ const router = createBrowserRouter([
     //   },
 
     // ],
+  },
+  {
+    path: "/admin",
+    element: (
+      <LoginChecker allowedUser="logged-in">
+        <ErrorBoundary><AdminPanelLayout /></ErrorBoundary>
+      </LoginChecker>
+    ),
+    children: [
+      {
+        path: "dashboard",
+        element: <ErrorBoundary><AdminDashboard /></ErrorBoundary>,
+      },
+    ],
   },
     {
       path: "/login",

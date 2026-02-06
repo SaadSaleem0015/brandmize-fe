@@ -1,50 +1,43 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-    content: [
-      "./index.html",
-      "./src/**/*.{js,ts,jsx,tsx}", // Scan all React files for classes
-    ],
-    theme: {
-      extend: {
-        colors: {
-          primary: {
-            50:  "#faf5ff",
-            100: "#f3e8ff",
-            200: "#e9d5ff",
-            300: "#d8b4fe",
-            400: "#c084fc",
-            500: "#a855f7", // main primary
-            600: "#9333ea",
-            700: "#7c3aed",
-            800: "#6b21a8",
-            900: "#581c87",
-          },
-          secondary: {
-            50:  "#eff6ff",
-            100: "#dbeafe",
-            200: "#bfdbfe",
-            300: "#93c5fd",
-            400: "#60a5fa",
-            500: "#3b82f6", // main secondary
-            600: "#2563eb",
-            700: "#1d4ed8",
-            800: "#1e40af",
-            900: "#1e3a8a",
-          },
-          accent: {
-            100: "#f0fdfa",
-            200: "#ccfbf1",
-            300: "#99f6e4",
-            400: "#5eead4",
-            500: "#14b8a6", // main accent
-            600: "#0d9488",
-            700: "#0f766e",
-            800: "#115e59",
-            900: "#134e4a",
-          },
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        primary: {
+          50:  "#eaf4ff",
+          100: "#d6ebff",
+          200: "#add7ff",
+          300: "#85c3ff",
+          400: "#5caffd",
+          500: "#3b9efc", // main primary
+          600: "#2386e6",
+          700: "#1868b8",
+          800: "#104a8a",
+          900: "#0a2d5c",
+        },
+
+        secondary: {
+          50:  "#ecfdf7",
+          100: "#d1faec",
+          200: "#a7f3d9",
+          300: "#6ee7bf",
+          400: "#45d6a9",
+          500: "#3dcc9e", // main secondary
+          600: "#2fb488",
+          700: "#238c6a",
+          800: "#19644c",
+          900: "#0f3c2f",
+        },
+
+        accent: {
+          500: "#fbbf24", // optional highlight color (you can change/remove)
         },
       },
     },
-    plugins: [],
-  };
-  
+  },
+  plugins: [],
+};
