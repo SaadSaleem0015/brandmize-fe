@@ -2,6 +2,7 @@
 import { ReactNode, useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { api } from "./BackendRequest";
+import { Loading } from "../Components/Loading";
 
 interface LoginCheckerProps {
   children: ReactNode;
@@ -70,7 +71,7 @@ export function LoginChecker({ children, allowedUser }: LoginCheckerProps) {
   }, [allowedUser, navigate, location.pathname]);
 
   if (isLoading) {
-    return <div>Loading...</div>; // Add your loading component
+    return <div><Loading /></div>; // Add your loading component
   }
 
   return <>{children}</>;

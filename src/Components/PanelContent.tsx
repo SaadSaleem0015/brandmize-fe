@@ -39,8 +39,7 @@ export function PanelContent({
 
   const handleUser = async () => {
     try {
-      const response = await api.get("/auth/profile");
-      const data = response.data;
+      const { data } = await api.get<{ name?: string; email?: string }>("/auth/profile");
       setUserName(data?.name || data?.email || "User");
     } catch (error) {
       console.error("Failed to fetch user profile:", error);
@@ -215,7 +214,7 @@ export function PanelContent({
             </div>
             <button
               onClick={handleExit}
-              className="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-xl hover:bg-primary-700 transition"
+              className="px-4 py-2 bg-primary-400 text-white text-sm font-medium rounded-xl hover:bg-primary-600 transition"
             >
               Exit Management
             </button>

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Check, MessageCircle, Zap, Users, Shield } from 'lucide-react';
 import { api, setAccessToken } from '../Helpers/BackendRequest';
 
-
 interface SignupFormData {
   firstName: string;
   lastName: string;
@@ -54,7 +53,6 @@ export function Signup() {
       newErrors.email = 'Please enter a valid email address';
     }
 
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -84,7 +82,6 @@ export function Signup() {
 
   const handleInputChange = (field: keyof SignupFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error for this field when user starts typing
     if (errors[field as keyof ValidationErrors]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
@@ -121,20 +118,18 @@ export function Signup() {
 
       setSuccess(true);
       
-      // Auto login after successful signup
-      const loginResponse = await api.post('/auth/signin', {
+      const { data: loginData } = await api.post<{ access_token: string; user?: { role?: string } }>('/auth/signin', {
         email,
         password,
       });
 
-      const { access_token, user } = loginResponse.data;
+      const { access_token, user } = loginData;
       setAccessToken(access_token);
       localStorage.setItem('user', JSON.stringify(user));
       if (user?.role) {
         localStorage.setItem("role", String(user.role));
       }
 
-      // Redirect after 2 seconds
       setTimeout(() => {
         window.location.href = user?.role === "admin" ? "/admin/dashboard" : "/dashboard";
       }, 2000);
@@ -152,77 +147,62 @@ export function Signup() {
 
   return (
     <div className="min-h-screen flex bg-white">
-      {/* Left Side - Visual/Hero Section */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-800 relative overflow-hidden">
-        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:40px_40px]"></div>
+      {/* Left Side - Image Section */}
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-primary-600 to-secondary-800">
+        {/* Background Image */}
+        <img 
+          src="/login.png" 
+          alt="Signup" 
+          className="absolute inset-0 w-full h-full object-cover opacity-90"
+        />
         
-        {/* Decorative Elements */}
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-accent-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000"></div>
+        {/* Overlay Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent"></div>
         
-        <div className="relative z-10 w-full flex flex-col justify-between p-12">
-          {/* Logo/Brand */}
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30">
-              <MessageCircle className="w-7 h-7 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">Brand<span className="text-primary-200">Mize</span></h1>
-              <p className="text-primary-100 text-sm mt-1">Professional Communication Suite</p>
-            </div>
-          </div>
-
-          {/* Hero Content */}
+        {/* Logo in top left corner */}
+        <div className="absolute top-8 left-8 z-20">
+          <img 
+            src="/logo.png" 
+            alt="BrandMize" 
+            className="h-12 w-auto"
+          />
+        </div>
+        
+        {/* Content Overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-12 text-white">
           <div className="max-w-lg">
-            <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6 border border-white/20">
-              <Zap className="w-4 h-4 text-white" />
-              <span className="text-white text-sm font-medium">Join 5,000+ Support Teams</span>
-            </div>
-            
-            <h2 className="text-4xl font-bold text-white mb-6 leading-tight">
-              Build better
-              <br />
-              <span className="text-accent-300">customer relationships</span>
+            <h2 className="text-3xl font-bold mb-4 leading-tight">
+              Join the Future of <span className="text-primary-300">Customer Engagement</span>
             </h2>
             
-            <div className="space-y-4 mb-12">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                  <Users className="w-4 h-4 text-white" />
+            <p className="text-white/80 mb-8 text-lg">
+              AI-powered conversations that convert. Start your 14-day free trial today.
+            </p>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                  <Users className="w-4 h-4" />
                 </div>
-                <span className="text-white/90">Unify all customer conversations in one place</span>
+                <span className="text-sm">5,000+ Active Agents</span>
               </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                  <Shield className="w-4 h-4 text-white" />
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                  <Zap className="w-4 h-4" />
                 </div>
-                <span className="text-white/90">Enterprise security & GDPR compliance</span>
+                <span className="text-sm">AI-Powered</span>
               </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                  <Zap className="w-4 h-4 text-white" />
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                  <Shield className="w-4 h-4" />
                 </div>
-                <span className="text-white/90">AI-powered responses & automations</span>
+                <span className="text-sm">Enterprise Security</span>
               </div>
-            </div>
-          </div>
-
-          {/* Testimonials */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-            <div className="flex items-start space-x-4">
-              <div className="flex-1">
-                <p className="text-white/90 italic mb-3">
-                  "BrandMize transformed our support operations. Response times improved by 60% and customer satisfaction skyrocketed."
-                </p>
-                <div className="flex items-center">
-                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center font-bold text-white">
-                    SJ
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-white font-medium">Sarah Johnson</p>
-                    <p className="text-primary-100 text-sm">Support Director, TechCorp</p>
-                  </div>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                  <MessageCircle className="w-4 h-4" />
                 </div>
+                <span className="text-sm">Omnichannel Support</span>
               </div>
             </div>
           </div>
@@ -232,6 +212,15 @@ export function Signup() {
       {/* Right Side - Signup Form */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 lg:p-12">
         <div className="w-full max-w-md">
+          {/* Mobile Logo - only visible on mobile */}
+          <div className="lg:hidden flex items-center justify-center mb-10">
+            <img 
+              src="/logo.png" 
+              alt="BrandMize" 
+              className="h-10 w-auto"
+            />
+          </div>
+
           {/* Progress Steps */}
           <div className="mb-10">
             <div className="flex items-center justify-between mb-6">
@@ -356,10 +345,6 @@ export function Signup() {
                   )}
                 </div>
 
-      
-
-               
-
                 {/* Next Button */}
                 <button
                   type="button"
@@ -449,7 +434,7 @@ export function Signup() {
                   )}
                 </div>
 
-                {/* Terms & Newsletter */}
+                {/* Terms */}
                 <div className="space-y-4">
                   <div className="flex items-start space-x-3">
                     <button
@@ -479,8 +464,6 @@ export function Signup() {
                       )}
                     </div>
                   </div>
-
-              
                 </div>
 
                 {/* Submit & Back Buttons */}
@@ -519,35 +502,6 @@ export function Signup() {
               </div>
             )}
           </form>
-
-          {/* Divider */}
-          {/* <div className="my-8">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500">Or sign up with</span>
-              </div>
-            </div>
-          </div> */}
-
-          {/* Social Signup */}
-          {/* <div className="space-y-3">
-            <button
-              type="button"
-              disabled={isLoading}
-              className="w-full flex items-center justify-center py-3.5 px-4 border border-gray-200 rounded-2xl bg-white hover:bg-gray-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 group"
-            >
-              <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-              <span className="text-gray-700 font-medium group-hover:text-gray-900 transition">Continue with Google</span>
-            </button>
-          </div> */}
 
           {/* Login Link */}
           <div className="mt-12 text-center">

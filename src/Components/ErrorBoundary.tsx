@@ -83,7 +83,7 @@ class ErrorBoundary extends Component<Props, State> {
               <div className="space-y-2">
                 <button
                   onClick={this.handleRetry}
-                  className="w-full group flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2.5 rounded-md text-sm font-medium transition-all duration-200 hover:scale-[1.02] shadow-subtle text-white"
+                  className="w-full group flex items-center justify-center gap-2 bg-primary-400 hover:bg-primary-600 text-white px-4 py-2.5 rounded-md text-sm font-medium transition-all duration-200 hover:scale-[1.02] shadow-subtle"
                 >
                   <HiArrowPath className="text-sm group-hover:rotate-180 transition-transform duration-300 text-white" />
                   Try Again

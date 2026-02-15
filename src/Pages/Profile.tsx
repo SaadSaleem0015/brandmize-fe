@@ -34,13 +34,13 @@ export function Profile() {
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const response = await api.get("/profile");
-        const payload = (response as any)?.data ?? {};
-        const data = payload?.data ?? payload;
+        const { data } = await api.get<{ name?: string; email?: string } | { data?: { name?: string; email?: string } }>("/profile");
+        const payload = data && typeof data === "object" && "data" in data ? (data as { data?: { name?: string; email?: string } }).data : data;
+        const profile = payload && typeof payload === "object" ? payload : {};
         setForm((prev) => ({
           ...prev,
-          name: data?.name ?? "",
-          email: data?.email ?? "",
+          name: (profile as { name?: string })?.name ?? "",
+          email: (profile as { email?: string })?.email ?? "",
         }));
       } catch {
         // ignore; notify could be added if needed
@@ -92,8 +92,8 @@ export function Profile() {
         newPassword: form.newPassword || null,
       };
 
-      const response = await api.post("/update-profile", payload);
-      notifyResponse(response.data, "Profile updated successfully", "Failed to update profile");
+      const { data } = await api.post<{ success?: boolean; detail?: string }>("/update-profile", payload);
+      notifyResponse(data ?? {}, "Profile updated successfully", "Failed to update profile");
 
       setForm((prev) => ({
         ...prev,
@@ -270,7 +270,7 @@ export function Profile() {
           <button
             type="submit"
             disabled={loading}
-            className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-primary to-secondary shadow-sm hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed transition"
+            className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-primary-400 hover:bg-primary-600 shadow-sm hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed transition"
           >
             {loading ? "Saving..." : "Save changes"}
           </button>

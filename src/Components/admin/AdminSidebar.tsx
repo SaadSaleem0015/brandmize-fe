@@ -1,8 +1,8 @@
 import { NavLink, Link, useLocation } from "react-router-dom";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect } from "react";
 import { 
-  Home, ChevronDown, ChevronRight, Menu, X,
-  MessageCircle, Shield
+  Home, Menu, X,
+  MessageCircle
 } from "lucide-react";
 
 interface MenuItem {
@@ -17,11 +17,13 @@ const SidebarItem = ({
   children,
   icon,
   isCollapsed,
+  onClick,
 }: {
   to: string;
   children: ReactNode;
   icon: ReactNode;
   isCollapsed?: boolean;
+  onClick?: () => void;
 }) => {
   const location = useLocation();
   const isActive = location.pathname === to;
@@ -35,6 +37,7 @@ const SidebarItem = ({
       `}
       title={isCollapsed ? String(children) : undefined}
       onClick={() => {
+        if (onClick) onClick();
         if (window.innerWidth < 1024) {
           document.body.classList.remove("mobile-sidebar-open");
         }
@@ -52,76 +55,7 @@ const SidebarItem = ({
   );
 };
 
-const SidebarSection = ({
-  title,
-  icon,
-  children,
-  isExpanded,
-  onToggle,
-  isCollapsed,
-  pathPrefix,
-}: {
-  title: string;
-  icon: ReactNode;
-  children: ReactNode;
-  isExpanded: boolean;
-  onToggle: () => void;
-  isCollapsed?: boolean;
-  pathPrefix?: string;
-}) => {
-  const location = useLocation();
-  const isActive = pathPrefix && location.pathname.startsWith(pathPrefix);
-
-  if (isCollapsed) {
-    return (
-      <div className="space-y-1 relative">
-        <button
-          onClick={onToggle}
-          onMouseEnter={() => !isExpanded && onToggle()}
-          onMouseLeave={() => isExpanded && onToggle()}
-          className={`flex items-center justify-center w-full p-2.5 rounded-xl transition-colors
-            ${isActive ? "bg-primary-50 text-primary-600" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"}`}
-          title={title}
-        >
-          {icon}
-          {isExpanded && (
-            <div className="absolute left-full ml-2 bg-gray-900 text-white text-sm py-1 px-3 rounded-lg shadow-lg whitespace-nowrap z-50">
-              {title}
-            </div>
-          )}
-        </button>
-        {isExpanded && (
-          <div 
-            className="absolute left-full top-0 ml-2 bg-white shadow-xl rounded-xl py-2 min-w-48 z-40 border border-gray-200"
-            onMouseEnter={() => onToggle()}
-            onMouseLeave={() => onToggle()}
-          >
-            {children}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-1">
-      <button
-        onClick={onToggle}
-        className={`flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-colors
-          ${isActive ? "bg-primary-50 text-primary-600" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"}`}
-      >
-        <div className="flex items-center gap-3">
-          <span className={`text-base ${isActive ? "text-primary-600" : "text-gray-500"}`}>{icon}</span>
-          <span className="font-medium text-sm">{title}</span>
-        </div>
-        {isExpanded ? <ChevronDown className="text-gray-400 text-sm" /> : <ChevronRight className="text-gray-400 text-sm" />}
-      </button>
-      <div className={`pl-9 space-y-1 overflow-hidden transition-all duration-300 ${isExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}>
-        {children}
-      </div>
-    </div>
-  );
-};
+// SidebarSection kept for future nested menus (currently unused)
 
 export function AdminSidebar({
   sidebarCollapsed,
@@ -134,8 +68,6 @@ export function AdminSidebar({
   mobileOpen?: boolean;
   setMobileOpen?: (open: boolean) => void;
 }) {
-  const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set());
-  const [hoveredMenu, setHoveredMenu] = useState<string | null>(null);
   const location = useLocation();
 
   // Only dashboard option for now
@@ -190,17 +122,15 @@ export function AdminSidebar({
     */
   };
 
+  // reserved for future nested menu expansion
   useEffect(() => {
     const newExpanded = new Set<string>();
-
     Object.entries(menuItems).forEach(([key, item]) => {
       if (item.subItems) {
         const isActive = item.subItems.some((subItem) => location.pathname.startsWith(subItem.path));
         if (isActive) newExpanded.add(key);
       }
     });
-
-    setExpandedMenus(newExpanded);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -241,17 +171,7 @@ export function AdminSidebar({
     return () => window.removeEventListener("resize", handleResize);
   }, [mobileOpen, setMobileOpen]);
 
-  const toggleMenu = (menu: string) => {
-    setExpandedMenus((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(menu)) {
-        newSet.delete(menu);
-      } else {
-        newSet.add(menu);
-      }
-      return newSet;
-    });
-  };
+  // toggleMenu reserved for future when more items are added
 
   const handleSidebarToggle = () => {
     setSidebarCollapsed(!sidebarCollapsed);
@@ -266,7 +186,7 @@ export function AdminSidebar({
   const renderMenuContent = () => (
     <>
       {/* Header with Brand */}
-      <div className="p-6 flex items-center justify-between bg-gradient-to-r from-primary-600 to-secondary-600 text-white">
+      <div className="p-6 flex items-center justify-between bg-primary-400 text-white">
         {!sidebarCollapsed ? (
           <Link to="/admin/dashboard" className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
@@ -303,17 +223,14 @@ export function AdminSidebar({
         </div>
 
         {/* Only Dashboard Option */}
-        {Object.entries(menuItems).map(([key, item]) => (
-          <SidebarItem 
-            key={key} 
-            to={item.path} 
-            icon={item.icon} 
-            isCollapsed={sidebarCollapsed}
-            onClick={handleMobileMenuClose}
-          >
-            {item.title}
-          </SidebarItem>
-        ))}
+        <SidebarItem
+          to={menuItems.dashboard.path}
+          icon={menuItems.dashboard.icon}
+          isCollapsed={sidebarCollapsed}
+          onClick={handleMobileMenuClose}
+        >
+          {menuItems.dashboard.title}
+        </SidebarItem>
 
         {/* Placeholder for future sections */}
         <div className="px-3 pt-4 pb-2">

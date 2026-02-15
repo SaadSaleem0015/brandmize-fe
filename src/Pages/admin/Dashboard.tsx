@@ -347,7 +347,7 @@ export function AdminDashboard() {
                       <span className="text-sm font-medium text-green-600">Online</span>
                     </div>
                   </div>
-                  <button className="w-full mt-6 bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white font-semibold py-3 px-4 rounded-xl transition">
+                  <button className="w-full mt-6 bg-primary-400 hover:bg-primary-600 text-white font-semibold py-3 px-4 rounded-xl transition">
                     Configure AI Agent
                   </button>
                 </div>

@@ -40,8 +40,7 @@ export function AdminPanelContent({
 
   const handleUser = async () => {
     try {
-      const response = await api.get("/auth/profile");
-      const data = response.data;
+      const { data } = await api.get<{ name?: string; email?: string }>("/auth/profile");
       setUserName(data?.name || data?.email || "Admin");
     } catch (error) {
       console.error("Failed to fetch user profile:", error);
