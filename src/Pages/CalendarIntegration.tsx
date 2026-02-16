@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../Helpers/backendRequest";
 import { notifyResponse, notyf } from "../Helpers/notyf";
 import { getAllTimezones } from "../Helpers/timezones";
 import { FiChevronDown, FiChevronUp, FiExternalLink } from "react-icons/fi";
+import { api } from "../Helpers/BackendRequest";
 
 interface CalComEventType {
   id: number;
