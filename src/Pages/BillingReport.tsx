@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { api } from "../Helpers/backendRequest";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { PageNumbers } from "../Components/PageNumbers";
@@ -26,6 +25,7 @@ import {
   TbChevronUp,
   TbAlertCircle,
 } from "react-icons/tb";
+import { api } from "../Helpers/BackendRequest";
 
 interface Payment {
   amount_paid: number;
