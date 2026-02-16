@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { api } from "../Helpers/backendRequest";
+import { api } from "../Helpers/BackendRequest";
 import { notifyResponse } from "../Helpers/notyf";
 import { useNavigate } from "react-router-dom";
 import { FaCreditCard, FaInfoCircle, FaCheck, FaArrowRight } from "react-icons/fa";

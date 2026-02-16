@@ -3,7 +3,7 @@ import * as Yup from "yup";
 import { notifyResponse } from "../Helpers/notyf";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
-import { api } from "../Helpers/backendRequest";
+import { api } from "../Helpers/BackendRequest";
 import { useNavigate } from "react-router-dom";
 import { FaCreditCard, FaUser, FaPhone, FaEnvelope, FaLock } from "react-icons/fa";
 

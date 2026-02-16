@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import Select, { MultiValue } from "react-select";
 import {
   api,
-} from "../../Helpers/backendRequest";
+} from "../../Helpers/BackendRequest";
 import {
   XMarkIcon,
 } from "@heroicons/react/24/solid";

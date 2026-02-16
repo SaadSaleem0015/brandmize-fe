@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../Helpers/backendRequest";
+import { api } from "../Helpers/BackendRequest";
 import { Loading } from "./Loading";
 
 export interface LoginCheckerProps {
@@ -20,7 +20,7 @@ export function LoginChecker({ children, allowedUser }: LoginCheckerProps) {
     //     const checkAccess = async () => {
     //         try {
     //             setAccessLoading(true)
-    //             const response = await backendRequest('GET', '/have_access');
+    //             const response = await BackendRequest('GET', '/have_access');
     //             if (response.success && "canAccess" in response && response.canAccess) {
     //                 return true;
     //             } else {

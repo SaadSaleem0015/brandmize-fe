@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../Helpers/backendRequest";
+import { api } from "../Helpers/BackendRequest";
 import { notifyResponse } from "../Helpers/notyf";
 import { InfoTooltip } from "./InfoTooltip";
 import { Loading } from "./Loading";

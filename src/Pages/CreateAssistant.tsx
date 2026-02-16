@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { FaRobot, FaMicrophone } from "react-icons/fa";
 import Model from "../Components/CreateAssistantTabs/Model";
 import Voice from "../Components/CreateAssistantTabs/Voice";
-import { api } from "../Helpers/backendRequest";
+import { api } from "../Helpers/BackendRequest";
 import { notifyResponse } from "../Helpers/notyf";
 import ForwardingPhoneNumber from "../Components/CreateAssistantTabs/ForwardingPhoneNumber";
 import { MdPhoneForwarded } from "react-icons/md";

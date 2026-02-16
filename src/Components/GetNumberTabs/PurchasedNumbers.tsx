@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { api } from '../../Helpers/backendRequest';
+import { api } from '../../Helpers/BackendRequest';
 import { Loading } from '../Loading';
 import { PageNumbers } from '../PageNumbers';
 import { notifyResponse } from '../../Helpers/notyf';

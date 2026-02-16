@@ -30,7 +30,7 @@ import {
   TbChevronDown,
   TbChevronUp
 } from 'react-icons/tb';
-import { api } from '../../Helpers/backendRequest';
+import { api } from '../../Helpers/BackendRequest';
 import { InfoTooltip } from '../InfoTooltip';
 import { notifyResponse } from '../../Helpers/notyf';
 

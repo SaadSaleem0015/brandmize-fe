@@ -1,5 +1,5 @@
 import { ChangeEvent, useState } from "react";
-import { api } from "../Helpers/backendRequest";
+import { api } from "../Helpers/BackendRequest";
 import { notifyResponse } from "../Helpers/notyf";
 import { useNavigate } from "react-router-dom";
 

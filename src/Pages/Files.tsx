@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../Helpers/backendRequest";
+import { api } from "../Helpers/BackendRequest";
 import { Loading } from "../Components/Loading";
 import { useNavigate } from "react-router-dom";
 import { UploadFile } from "../Components/UploadFile";

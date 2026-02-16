@@ -1,7 +1,7 @@
 import React, { useState, useEffect, ChangeEvent } from "react";
 import { FiPlus } from "react-icons/fi";
 import { MdSearch, MdCheckBox, MdCheckBoxOutlineBlank } from "react-icons/md";
-import { api } from "../../Helpers/backendRequest";
+import { api } from "../../Helpers/BackendRequest";
 import { notifyResponse } from "../../Helpers/notyf";
 import { Input } from "../Input";
 import { Loading } from "../Loading";
