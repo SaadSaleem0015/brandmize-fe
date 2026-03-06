@@ -113,7 +113,7 @@ const router = createBrowserRouter([
         element: <ErrorBoundary><PaymentMethod /></ErrorBoundary>,
       },
       {
-        path: "calander-integration",
+        path: "calender-integration",
         element: <ErrorBoundary><CalendarIntegration /></ErrorBoundary>,
       },
       {

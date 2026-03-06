@@ -556,7 +556,7 @@ const Model: React.FC<ModelProps> = ({
                         <span className="font-semibold">For appointment scheduling assistants:</span> First integrate your calendar, then use the appointment prompt template below.
                       </p>
                       <Link 
-                        to="/calendar-integration" 
+                        to="/calender-integration" 
                         className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 mt-2"
                       >
                         Go to Calendar Integration

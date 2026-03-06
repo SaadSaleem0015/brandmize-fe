@@ -174,7 +174,7 @@ export function Sidebar({
         { title: "Phone Numbers", path: "/getnumbers", icon: <Phone className="w-4 h-4" /> },
         { title: "Leads", path: "/files", icon: <Users className="w-4 h-4" /> },
         { title: "Knowledge Base", path: "/documents", icon: <FileText className="w-4 h-4" /> },
-        { title: "Calander Integration", path: "/calander-integration", icon: <Calendar className="w-4 h-4" /> },
+        { title: "Calander Integration", path: "/calender-integration", icon: <Calendar className="w-4 h-4" /> },
 
       ],
     },

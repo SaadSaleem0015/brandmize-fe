@@ -336,7 +336,7 @@ const Assistant = () => {
               </div>
             </div>
             <Link
-              to="/calendar-integration"
+              to="/calender-integration"
               className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white text-primary-500 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium border border-blue-200 shadow-sm"
             >
               <FiPlus className="w-4 h-4" />
