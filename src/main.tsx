@@ -34,6 +34,7 @@ import MakePayment from "./Pages/MakePayment";
 import CalendarIntegration from "./Pages/CalendarIntegration";
 import GetNumbers from "./Pages/GetNumbers";
 import BillingReport from "./Pages/BillingReport";
+import Inbox from "./Pages/Inbox";
 
 const router = createBrowserRouter([
   {
@@ -47,6 +48,14 @@ const router = createBrowserRouter([
       {
         path: "dashboard",
         element: <ErrorBoundary><Dashboard /></ErrorBoundary>,
+      },
+      {
+        path: "inbox",
+        element: <ErrorBoundary><Inbox /></ErrorBoundary>,
+      },
+      {
+        path: "inbox/:conversationId",
+        element: <ErrorBoundary><Inbox /></ErrorBoundary>,
       },
       {
         path: "profile",
