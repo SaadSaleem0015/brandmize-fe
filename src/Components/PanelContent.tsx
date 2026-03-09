@@ -168,14 +168,7 @@ export function PanelContent({
                     <User className="w-4 h-4 text-gray-500" />
                     Profile & Settings
                   </Link>
-                  <Link
-                    to="/billing"
-                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition"
-                    onClick={() => setDroppedDown(false)}
-                  >
-                    <CreditCard className="w-4 h-4 text-gray-500" />
-                    Billing & Plan
-                  </Link>
+             
                 </div>
 
                 {/* Divider */}

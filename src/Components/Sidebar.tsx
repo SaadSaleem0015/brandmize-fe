@@ -422,21 +422,7 @@ export function Sidebar({
       </div>
 
       {/* Bottom Section - User info */}
-      {!sidebarCollapsed && (
-        <div className="absolute bottom-20 left-0 right-0 px-4">
-          <div className="px-3 py-3 bg-primary-50 rounded-xl border border-primary-100">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                <GraduationCap className="w-4 h-4 text-primary-600" />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-primary-700">Free Plan</p>
-                <p className="text-xs text-primary-600">2 AI assistants left</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      
     </>
   );
 

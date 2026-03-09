@@ -568,7 +568,7 @@ export function Dashboard() {
         </div>
 
         {/* Recent Activity */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+        {/* <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
@@ -626,7 +626,7 @@ export function Dashboard() {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Usage Summary */}
