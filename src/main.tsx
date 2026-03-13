@@ -35,10 +35,13 @@ import CalendarIntegration from "./Pages/CalendarIntegration";
 import GetNumbers from "./Pages/GetNumbers";
 import BillingReport from "./Pages/BillingReport";
 import Inbox from "./Pages/Inbox";
+<<<<<<< HEAD
 import SocialConnections from "./Pages/ChannelConnection";
 import InstagramCallback from "./Pages/ChannelInstagram";
 import MessengerCallback from "./Pages/MessengerCallback";
 import ChatAssistant from "./Pages/ChatAssistant";
+=======
+>>>>>>> 4d6513ef4ecd92d15dd261b964939a56c30da1ea
 
 const router = createBrowserRouter([
   {
@@ -61,6 +64,7 @@ const router = createBrowserRouter([
         path: "inbox/:conversationId",
         element: <ErrorBoundary><Inbox /></ErrorBoundary>,
       },
+<<<<<<< HEAD
 
       {
         path: "channels",
@@ -69,6 +73,8 @@ const router = createBrowserRouter([
 
       { path: "/channel/instagram", element: <ErrorBoundary><InstagramCallback /></ErrorBoundary> },
       { path: "/channel/messenger", element: <ErrorBoundary><MessengerCallback /></ErrorBoundary> },
+=======
+>>>>>>> 4d6513ef4ecd92d15dd261b964939a56c30da1ea
       {
         path: "profile",
         element: <ErrorBoundary><Profile /></ErrorBoundary>,

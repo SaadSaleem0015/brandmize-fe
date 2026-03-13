@@ -176,6 +176,13 @@ export function Sidebar({
       title: "Channels",
       icon: <MessageSquare className="w-5 h-5" />,
       path:"/channels"
+      title: "Communication Settings",
+      icon: <MessageSquare className="w-5 h-5" />,
+      subItems: [
+        { title: "Instagram", path: "/settings/instagram", icon: <Instagram className="w-4 h-4" /> },
+        { title: "Messenger", path: "/settings/messenger", icon: <Facebook className="w-4 h-4" /> },
+        { title: "WhatsApp", path: "/settings/whatsapp", icon: <FaWhatsapp className="w-4 h-4" /> },
+      ],
     },
     business: {
       title: "Business",
@@ -391,6 +398,20 @@ export function Sidebar({
             className="relative"
           >
            
+            <SidebarSection
+              title={menuSections.communication.title}
+              icon={menuSections.communication.icon}
+              isExpanded={sidebarCollapsed ? hoveredMenu === "communication" : expandedMenus.has("communication")}
+              onToggle={() => toggleMenu("communication")}
+              isCollapsed={sidebarCollapsed}
+              pathPrefix="/settings"
+            >
+              {!sidebarCollapsed || hoveredMenu === "communication" ? (
+                menuSections.communication.subItems?.map((item) => 
+                  renderSubItem(item, sidebarCollapsed && hoveredMenu !== "communication", "communication")
+                )
+              ) : null}
+            </SidebarSection>
 
           {/* Business Section */}
           <div 
