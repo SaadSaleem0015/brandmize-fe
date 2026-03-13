@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Mail, ArrowLeft, CheckCircle, Lock, Eye, EyeOff, Key } from 'lucide-react';
 import { api } from '../Helpers/BackendRequest';
 
@@ -16,6 +17,7 @@ export function ForgotPassword() {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [countdown, setCountdown] = useState(0);
+  const navigate = useNavigate();
 
   // Start countdown timer
   const startCountdown = () => {
@@ -246,7 +248,7 @@ export function ForgotPassword() {
         <div className="w-full max-w-md">
           {/* Back Button */}
           <button
-            onClick={() => window.location.href = '/login'}
+            onClick={() => navigate('/login')}
             className="flex items-center text-gray-600 hover:text-gray-900 mb-10 group transition"
           >
             <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
@@ -527,14 +529,14 @@ export function ForgotPassword() {
 
               <div className="space-y-3">
                 <button
-                  onClick={() => window.location.href = '/login'}
+                  onClick={() => navigate('/login')}
                   className="w-full bg-primary-400 hover:bg-primary-600 text-white font-semibold py-4 px-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   Sign in to your account
                 </button>
 
                 <button
-                  onClick={() => window.location.href = '/dashboard'}
+                  onClick={() => navigate('/dashboard')}
                   className="w-full py-3.5 px-4 border border-gray-200 rounded-2xl bg-white hover:bg-gray-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 text-gray-700 font-medium"
                 >
                   Go to dashboard

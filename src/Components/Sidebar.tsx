@@ -173,19 +173,16 @@ export function Sidebar({
       icon: <Inbox className="w-5 h-5" />,
     },
     communication: {
-      title: "Communication Settings",
+      title: "Channels",
       icon: <MessageSquare className="w-5 h-5" />,
-      subItems: [
-        { title: "Instagram", path: "/settings/instagram", icon: <Instagram className="w-4 h-4" /> },
-        { title: "Messenger", path: "/settings/messenger", icon: <Facebook className="w-4 h-4" /> },
-        { title: "WhatsApp", path: "/settings/whatsapp", icon: <FaWhatsapp className="w-4 h-4" /> },
-      ],
+      path:"/channels"
     },
     business: {
       title: "Business",
       icon: <Building2 className="w-5 h-5" />,
       subItems: [
         { title: "AI Assistants", path: "/assistant", icon: <Bot className="w-4 h-4" /> },
+        { title: "AI Chat Assistants", path: "/chat-assistant", icon: <Bot className="w-4 h-4" /> },
         { title: "Phone Numbers", path: "/getnumbers", icon: <Phone className="w-4 h-4" /> },
         { title: "Leads", path: "/files", icon: <Users className="w-4 h-4" /> },
         { title: "Knowledge Base", path: "/documents", icon: <FileText className="w-4 h-4" /> },
@@ -376,6 +373,15 @@ export function Sidebar({
           >
             {menuSections.inbox.title}
           </SidebarItem>
+
+
+          <SidebarItem 
+            to={menuSections.communication.path}
+            icon={menuSections.communication.icon}
+            isCollapsed={sidebarCollapsed}
+          >
+            {menuSections.communication.title}
+          </SidebarItem>
           </div>
 
           {/* Communication Settings Section */}
@@ -384,20 +390,7 @@ export function Sidebar({
             onMouseLeave={() => setHoveredMenu(null)}
             className="relative"
           >
-            <SidebarSection
-              title={menuSections.communication.title}
-              icon={menuSections.communication.icon}
-              isExpanded={sidebarCollapsed ? hoveredMenu === "communication" : expandedMenus.has("communication")}
-              onToggle={() => toggleMenu("communication")}
-              isCollapsed={sidebarCollapsed}
-              pathPrefix="/settings"
-            >
-              {!sidebarCollapsed || hoveredMenu === "communication" ? (
-                menuSections.communication.subItems?.map((item) => 
-                  renderSubItem(item, sidebarCollapsed && hoveredMenu !== "communication", "communication")
-                )
-              ) : null}
-            </SidebarSection>
+           
 
           {/* Business Section */}
           <div 
