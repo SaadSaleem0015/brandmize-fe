@@ -1,5 +1,5 @@
 // Components/inbox/ChatWindow.tsx
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { ArrowLeft, Send, Paperclip, Image, Check, CheckCheck } from 'lucide-react';
 import { Instagram, Facebook } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
@@ -9,8 +9,10 @@ import { Conversation, Message } from '../../Helpers/inbox.types';
 
 interface ChatWindowProps {
   conversation?: Conversation;
+  messages: Message[];
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
   onBack: () => void;
-  onMessageSent?: () => void;
+  onMessageSent: (tempId: number, actualMessage: Message) => void;
 }
 
 const getChannelHeaderColor = (channel?: string) => {
@@ -39,17 +41,45 @@ const getChannelIcon = (channel?: string) => {
   }
 };
 
-const MessageStatus = ({ status }: { status: Message['status'] }) => {
-  switch (status) {
-    case 'sent':
-      return <Check className="w-3 h-3 text-gray-400" />;
-    case 'delivered':
-      return <CheckCheck className="w-3 h-3 text-gray-400" />;
-    case 'read':
-      return <CheckCheck className="w-3 h-3 text-blue-500" />;
-    default:
-      return null;
+// Updated MessageStatus component
+const MessageStatus = ({ status, isFromAgent }: { status?: Message['status']; isFromAgent: boolean }) => {
+  if (!isFromAgent) return null; // Don't show status for customer messages
+  
+  // For messages loaded from history, they should show double tick
+  if (status === 'delivered' || status === 'read') {
+    return (
+      <div className="flex items-center">
+        <Check className="w-3 h-3 text-gray-400" />
+        <Check className="w-3 h-3 text-gray-400 -ml-1" />
+      </div>
+    );
   }
+  
+  // For messages with read receipt
+  // if (status === 'read') {
+  //   return (
+  //     <div className="flex items-center">
+  //       <Check className="w-3 h-3 text-blue-500" />
+  //       <Check className="w-3 h-3 text-blue-500 -ml-1" />
+  //     </div>
+  //   );
+  // }
+  
+  // For sent messages (optimistic updates)
+  if (status === 'sent') {
+    return (
+      <div className="flex items-center">
+        <Check className="w-3 h-3 text-gray-400" />
+      </div>
+    );
+  }
+  
+  // Default - show single tick for any agent message without specific status
+  return (
+    <div className="flex items-center">
+      <Check className="w-3 h-3 text-gray-400" />
+    </div>
+  );
 };
 
 const EmptyChatState = () => (
@@ -66,8 +96,13 @@ const EmptyChatState = () => (
   </div>
 );
 
-export default function ChatWindow({ conversation, onBack, onMessageSent }: ChatWindowProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
+export default function ChatWindow({ 
+  conversation, 
+  messages, 
+  setMessages, 
+  onBack, 
+  onMessageSent 
+}: ChatWindowProps) {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
@@ -76,6 +111,7 @@ export default function ChatWindow({ conversation, onBack, onMessageSent }: Chat
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const isFirstLoad = useRef(true);
 
   // Fetch messages when conversation changes
   useEffect(() => {
@@ -83,13 +119,18 @@ export default function ChatWindow({ conversation, onBack, onMessageSent }: Chat
       fetchMessages(1);
     } else {
       setMessages([]);
+      setPage(1);
+      setHasMore(true);
     }
-  }, [conversation]);
+  }, [conversation?.id]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (!isFirstLoad.current && messages.length > 0) {
+      scrollToBottom();
+    }
+    isFirstLoad.current = false;
+  }, [messages.length]);
 
   const fetchMessages = async (pageNum: number) => {
     if (!conversation) return;
@@ -101,10 +142,19 @@ export default function ChatWindow({ conversation, onBack, onMessageSent }: Chat
       if (response.data) {
         const newMessages = response.data.messages || response.data;
         
+        // For messages loaded from history, set status to 'delivered' for agent messages
+        const messagesWithStatus = newMessages.map((msg: Message) => {
+          if (msg.sender === 'human_agent' && !msg.status) {
+            return { ...msg, status: 'delivered' };
+          }
+          return msg;
+        });
+        
         if (pageNum === 1) {
-          setMessages(newMessages);
+          setMessages(messagesWithStatus);
+          setTimeout(scrollToBottom, 100);
         } else {
-          setMessages(prev => [...newMessages, ...prev]);
+          setMessages(prev => [...messagesWithStatus, ...prev]);
         }
         
         setHasMore(response.data.has_more || false);
@@ -128,48 +178,119 @@ export default function ChatWindow({ conversation, onBack, onMessageSent }: Chat
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleSend = async () => {
-    if (!newMessage.trim() || !conversation || sending) return;
+  // const handleSend = async () => {
+  //   if (!newMessage.trim() || !conversation || sending) return;
 
-    const messageContent = newMessage.trim();
-    setNewMessage('');
-    setSending(true);
+  //   const messageContent = newMessage.trim();
+  //   setNewMessage('');
+  //   setSending(true);
 
-    // Optimistic update
-    const tempMessage: Message = {
-      id: Date.now(),
-      content: messageContent,
-      sender: 'human_agent',
-      timestamp: Date.now(),
-      type: 'text',
-      status: 'sent'
-    };
-    setMessages(prev => [...prev, tempMessage]);
+  //   // Create temporary message with SINGLE tick (sent status)
+  //   const tempId = Date.now();
+  //   const tempMessage: Message = {
+  //     id: tempId,
+  //     content: messageContent,
+  //     sender: 'human_agent',
+  //     timestamp: Date.now(),
+  //     type: 'text',
+  //     status: 'sent',  // Single tick
+  //     media_url: null
+  //   };
+    
+  //   // Add temp message to UI immediately
+  //   setMessages(prev => [...prev, tempMessage]);
+  //   scrollToBottom();
 
-    try {
-      const response = await api.post(`/omni/conversations/${conversation.id}/send-message`, {
-        message: messageContent
-      });
+  //   try {
+  //     // Send to API
+  //     const response = await api.post(`/omni/conversations/${conversation.id}/send-message`, {
+  //       message: messageContent
+  //     });
 
-      if (response.data) {
-        // Replace temp message with actual message
-        setMessages(prev => 
-          prev.map(msg => 
-            msg.id === tempMessage.id ? { ...response.data, status: 'delivered' } : msg
-          )
-        );
-        onMessageSent?.();
-      }
-    } catch (error) {
-      console.error('Error sending message:', error);
-      notifyResponse(error, '', 'Failed to send message');
-      // Remove temp message on error
-      setMessages(prev => prev.filter(msg => msg.id !== tempMessage.id));
-      setNewMessage(messageContent); // Restore message
-    } finally {
-      setSending(false);
-    }
+  //     if (response.data) {
+  //       // Don't add message here - wait for WebSocket echo
+  //       // Just notify parent that message was sent successfully
+  //       onMessageSent(tempId, response.data);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error sending message:', error);
+  //     notifyResponse(error, '', 'Failed to send message');
+  //     // Remove temp message on error
+  //     setMessages(prev => prev.filter(msg => msg.id !== tempId));
+  //     setNewMessage(messageContent);
+  //   } finally {
+  //     setSending(false);
+  //   }
+  // };
+
+
+// In ChatWindow.tsx - handleSend function
+const handleSend = async () => {
+  if (!newMessage.trim() || !conversation || sending) return;
+
+  const messageContent = newMessage.trim();
+  setNewMessage('');
+  setSending(true);
+
+  // Generate a truly unique temporary ID that we can match later
+  const tempId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  
+  const tempMessage: Message = {
+    id: tempId as any, // Temporary ID
+    content: messageContent,
+    sender: 'human_agent',
+    timestamp: Date.now(),
+    type: 'text',
+    status: 'sent',  // Single tick
+    media_url: null
   };
+  
+  // Add temp message to UI
+  setMessages(prev => [...prev, tempMessage]);
+  scrollToBottom();
+
+  try {
+    // Store temp ID in sessionStorage or context to match with echo
+    sessionStorage.setItem(`pending_${tempId}`, JSON.stringify({
+      content: messageContent,
+      timestamp: Date.now()
+    }));
+    
+    const response = await api.post(`/omni/conversations/${conversation.id}/send-message`, {
+      message: messageContent
+    });
+
+    if (response.data) {
+      // Don't do anything here - wait for WebSocket
+      console.log('Message sent successfully, waiting for echo...');
+    }
+  } catch (error) {
+    console.error('Error sending message:', error);
+    notifyResponse(error, '', 'Failed to send message');
+    setMessages(prev => prev.filter(msg => msg.id !== tempId));
+    setNewMessage(messageContent);
+    sessionStorage.removeItem(`pending_${tempId}`);
+  } finally {
+    setSending(false);
+  }
+};
+
+  
+  // Function to update message status when echo arrives
+  const updateMessageStatus = useCallback((tempId: number, actualMessage: Message) => {
+    setMessages(prev => 
+      prev.map(msg => {
+        if (msg.id === tempId) {
+          // Update temp message with actual data and DOUBLE tick
+          return {
+            ...actualMessage,
+            status: 'delivered'  // Double tick
+          };
+        }
+        return msg;
+      })
+    );
+  }, []);
 
   const handleFileUpload = async (type: 'image' | 'file', file: File) => {
     if (!conversation) return;
@@ -185,7 +306,7 @@ export default function ChatWindow({ conversation, onBack, onMessageSent }: Chat
 
       if (response.data) {
         setMessages(prev => [...prev, response.data]);
-        onMessageSent?.();
+        scrollToBottom();
       }
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -207,6 +328,31 @@ export default function ChatWindow({ conversation, onBack, onMessageSent }: Chat
     });
   };
 
+  const formatDate = (timestamp: number) => {
+    const date = new Date(timestamp);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return 'Today';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
+
+  // Group messages by date
+  const groupedMessages: { [key: string]: Message[] } = {};
+  messages.forEach(message => {
+    const date = formatDate(message.timestamp);
+    if (!groupedMessages[date]) {
+      groupedMessages[date] = [];
+    }
+    groupedMessages[date].push(message);
+  });
+
   if (!conversation) {
     return <EmptyChatState />;
   }
@@ -223,7 +369,7 @@ export default function ChatWindow({ conversation, onBack, onMessageSent }: Chat
         </button>
 
         <img
-          src={conversation.participant.profile_picture_url}
+          src={conversation.participant.profile_picture_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(conversation.participant.name)}&background=7032e5&color=fff`}
           alt={conversation.participant.name}
           className="w-9 h-9 rounded-full object-cover"
           onError={(e) => {
@@ -264,86 +410,112 @@ export default function ChatWindow({ conversation, onBack, onMessageSent }: Chat
           </div>
         )}
 
-        <div className="space-y-3">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.sender === 'human_agent' ? 'justify-end' : 'justify-start'}`}
-            >
-              {message.type === 'text' && (
-                <div className="max-w-[72%] group">
-                  <div
-                    className={`
-                      px-3 py-1.5 rounded-2xl relative
-                      ${message.sender === 'human_agent'
-                        ? 'bg-primary-600 text-white rounded-br-none'
-                        : 'bg-white text-gray-900 rounded-bl-none shadow-sm border border-gray-200'
-                      }
-                    `}
-                  >
-                    <p className="text-sm break-words whitespace-pre-wrap">{message.content}</p>
-                    <div className={`flex items-center justify-end gap-1 mt-0.5 ${message.sender === 'human_agent' ? 'text-primary-100' : 'text-gray-400'}`}>
-                      <span className="text-[10px]">{formatTime(message.timestamp)}</span>
-                      {message.sender === 'human_agent' && (
-                        <MessageStatus status={message.status} />
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
+        <div className="space-y-4">
+          {Object.entries(groupedMessages).map(([date, dateMessages]) => (
+            <div key={date}>
+              {/* Date separator */}
+              <div className="flex justify-center mb-3">
+                <span className="text-[10px] bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
+                  {date}
+                </span>
+              </div>
 
-              {(message.type === 'image' || message.type === 'video') && (
-                <div className="max-w-[72%]">
-                  {message.type === 'image' ? (
-                    <img
-                      src={message.media_url}
-                      alt="Shared"
-                      className="rounded-2xl shadow-sm border border-gray-200 max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
-                      onClick={() => window.open(message.media_url, '_blank')}
-                    />
-                  ) : (
-                    <video
-                      src={message.media_url}
-                      controls
-                      className="rounded-2xl shadow-sm border border-gray-200 max-w-full h-auto"
-                    />
+              {/* Messages for this date */}
+              {dateMessages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex mb-2 ${
+                    message.sender === 'human_agent' ? 'justify-end' : 'justify-start'
+                  }`}
+                >
+                  {message.type === 'text' && (
+                    <div className="max-w-[72%] group">
+                      <div
+                        className={`
+                          px-3 py-1.5 rounded-2xl relative
+                          ${message.sender === 'human_agent'
+                            ? 'bg-primary-600 text-white rounded-br-none'
+                            : 'bg-white text-gray-900 rounded-bl-none shadow-sm border border-gray-200'
+                          }
+                        `}
+                      >
+                        <p className="text-sm break-words whitespace-pre-wrap">
+                          {message.content}
+                        </p>
+                        <div className={`flex items-center justify-end gap-1 mt-0.5 ${
+                          message.sender === 'human_agent' ? 'text-primary-100' : 'text-gray-400'
+                        }`}>
+                          <span className="text-[10px]">{formatTime(message.timestamp)}</span>
+                          {/* Show status only for agent messages */}
+                          <MessageStatus 
+                            status={message.status} 
+                            isFromAgent={message.sender === 'human_agent'} 
+                          />
+                        </div>
+                      </div>
+                    </div>
                   )}
-                  <div className={`flex items-center gap-1 mt-0.5 ${message.sender === 'user' ? 'justify-end' : 'justify-start'} text-gray-400`}>
-                    <span className="text-[10px]">{formatTime(message.timestamp)}</span>
-                    {message.sender === 'user' && (
-                      <MessageStatus status={message.status} />
-                    )}
-                  </div>
-                </div>
-              )}
 
-              {message.type === 'file' && (
-                <div className="max-w-[72%]">
-                  <a
-                    href={message.media_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`
-                      block px-3 py-2 rounded-2xl
-                      ${message.sender === 'user'
-                        ? 'bg-primary-600 text-white'
-                        : 'bg-white text-gray-900 border border-gray-200'
-                      }
-                    `}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Paperclip className="w-4 h-4" />
-                      <span className="text-sm truncate">Download File</span>
-                    </div>
-                  <div className={`flex items-center justify-end gap-1 mt-0.5 ${message.sender === 'user' ? 'text-primary-100' : 'text-gray-400'}`}>
-                      <span className="text-[10px]">{formatTime(message.timestamp)}</span>
-                      {message.sender === 'user' && (
-                        <MessageStatus status={message.status} />
+                  {(message.type === 'image' || message.type === 'video') && (
+                    <div className="max-w-[72%]">
+                      {message.type === 'image' ? (
+                        <img
+                          src={message.media_url || ''}
+                          alt="Shared"
+                          className="rounded-2xl shadow-sm border border-gray-200 max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
+                          onClick={() => message.media_url && window.open(message.media_url, '_blank')}
+                        />
+                      ) : (
+                        <video
+                          src={message.media_url || ''}
+                          controls
+                          className="rounded-2xl shadow-sm border border-gray-200 max-w-full h-auto"
+                        />
                       )}
+                      <div className={`flex items-center gap-1 mt-0.5 ${
+                        message.sender === 'human_agent' ? 'justify-end' : 'justify-start'
+                      } text-gray-400`}>
+                        <span className="text-[10px]">{formatTime(message.timestamp)}</span>
+                        <MessageStatus 
+                          status={message.status} 
+                          isFromAgent={message.sender === 'human_agent'} 
+                        />
+                      </div>
                     </div>
-                  </a>
+                  )}
+
+                  {message.type === 'file' && (
+                    <div className="max-w-[72%]">
+                      <a
+                        href={message.media_url || '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`
+                          block px-3 py-2 rounded-2xl
+                          ${message.sender === 'human_agent'
+                            ? 'bg-primary-600 text-white'
+                            : 'bg-white text-gray-900 border border-gray-200'
+                          }
+                        `}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Paperclip className="w-4 h-4" />
+                          <span className="text-sm truncate">Download File</span>
+                        </div>
+                        <div className={`flex items-center justify-end gap-1 mt-0.5 ${
+                          message.sender === 'human_agent' ? 'text-primary-100' : 'text-gray-400'
+                        }`}>
+                          <span className="text-[10px]">{formatTime(message.timestamp)}</span>
+                          <MessageStatus 
+                            status={message.status} 
+                            isFromAgent={message.sender === 'human_agent'} 
+                          />
+                        </div>
+                      </a>
+                    </div>
+                  )}
                 </div>
-              )}
+              ))}
             </div>
           ))}
           <div ref={messagesEndRef} />

@@ -172,17 +172,10 @@ export function Sidebar({
       path: "/inbox",
       icon: <Inbox className="w-5 h-5" />,
     },
-    communication: {
-      title: "Channels",
+    connections: {
+      title: "Connections",
+      path: "/channels",
       icon: <MessageSquare className="w-5 h-5" />,
-      path:"/channels"
-      title: "Communication Settings",
-      icon: <MessageSquare className="w-5 h-5" />,
-      subItems: [
-        { title: "Instagram", path: "/settings/instagram", icon: <Instagram className="w-4 h-4" /> },
-        { title: "Messenger", path: "/settings/messenger", icon: <Facebook className="w-4 h-4" /> },
-        { title: "WhatsApp", path: "/settings/whatsapp", icon: <FaWhatsapp className="w-4 h-4" /> },
-      ],
     },
     business: {
       title: "Business",
@@ -381,14 +374,16 @@ export function Sidebar({
             {menuSections.inbox.title}
           </SidebarItem>
 
-
           <SidebarItem 
-            to={menuSections.communication.path}
-            icon={menuSections.communication.icon}
+            to={menuSections.connections.path}
+            icon={menuSections.connections.icon}
             isCollapsed={sidebarCollapsed}
           >
-            {menuSections.communication.title}
+            {menuSections.connections.title}
           </SidebarItem>
+
+
+          
           </div>
 
           {/* Communication Settings Section */}
@@ -398,7 +393,7 @@ export function Sidebar({
             className="relative"
           >
            
-            <SidebarSection
+            {/* <SidebarSection
               title={menuSections.communication.title}
               icon={menuSections.communication.icon}
               isExpanded={sidebarCollapsed ? hoveredMenu === "communication" : expandedMenus.has("communication")}
@@ -411,7 +406,7 @@ export function Sidebar({
                   renderSubItem(item, sidebarCollapsed && hoveredMenu !== "communication", "communication")
                 )
               ) : null}
-            </SidebarSection>
+            </SidebarSection> */}
 
           {/* Business Section */}
           <div 

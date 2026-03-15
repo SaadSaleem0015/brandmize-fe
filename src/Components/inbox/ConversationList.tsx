@@ -3,7 +3,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Instagram, Facebook, MessageCircle, RefreshCw } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
 import { Conversation } from '../../Helpers/inbox.types';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -65,6 +65,11 @@ export default function ConversationList({
   onRefresh 
 }: ConversationListProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    setUnreadCount(conversations.filter(c => c.unread_count > 0).length);
+  }, [conversations]);
 
   const filteredConversations = conversations
     .filter(conv => 
@@ -108,6 +113,7 @@ export default function ConversationList({
             <h2 className="text-sm font-semibold text-gray-900">Conversations</h2>
             <p className="text-xs text-gray-500 mt-0.5">
               {filteredConversations.length} {filteredConversations.length === 1 ? 'thread' : 'threads'}
+              {unreadCount > 0 && ` · ${unreadCount} unread`}
             </p>
           </div>
           <button
@@ -186,23 +192,17 @@ export default function ConversationList({
                     </span>
                   </div>
 
-                  {/* Middle row: last message preview */}
-                  {/* <p
-                    className={`truncate mb-1 ${
+                  {/* Last message preview */}
+                  <div className="flex items-center justify-between">
+                    <p className={`truncate max-w-[70%] ${
                       conversation.unread_count > 0
                         ? 'text-xs text-gray-900 font-medium'
                         : 'text-xs text-gray-600'
-                    }`}
-                  >
-                    {conversation.last_message_preview || 'No messages yet'}
-                  </p> */}
+                    }`}>
+                      {conversation.last_message_preview || 'No messages yet'}
+                    </p>
 
-                  {/* Bottom row: username + unread badge */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-[12px] text-gray-700 truncate max-w-[65%]">
-                      {conversation.last_message_preview || "No messages yet"}
-                    </span>
-
+                    {/* Unread Badge */}
                     {/* {conversation.unread_count > 0 && (
                       <span className="inline-flex min-w-[1.5rem] h-5 items-center justify-center rounded-full bg-primary-600 text-white text-[11px] font-semibold shadow-sm">
                         {conversation.unread_count}

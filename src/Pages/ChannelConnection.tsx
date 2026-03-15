@@ -12,10 +12,11 @@ import {
   ArrowRight,
   ChevronDown,
   HelpCircle,
-  XCircle,
-  CheckCircle2
+  CheckCircle2,
+  Sparkles
 } from 'lucide-react';
 import { api } from "../Helpers/BackendRequest";
+import { notifyResponse } from "../Helpers/notyf";
 
 // Types
 interface InstagramAccountInfo {
@@ -24,6 +25,7 @@ interface InstagramAccountInfo {
   name: string;
   profile_picture_url: string;
   channel_type: 'instagram';
+  ai_enabled: boolean;
 }
 
 interface MessengerAccountInfo {
@@ -31,6 +33,7 @@ interface MessengerAccountInfo {
   name: string;
   category: string;
   channel_type: 'messenger';
+  ai_enabled: boolean;
 }
 
 type AccountInfo = InstagramAccountInfo | MessengerAccountInfo;
@@ -40,12 +43,6 @@ interface ConnectionStatus {
   accountInfo?: AccountInfo;
   loading: boolean;
   error?: string;
-}
-
-interface ToastMessage {
-  type: 'success' | 'error' | 'info';
-  message: string;
-  id: number;
 }
 
 const Channels: React.FC = () => {
@@ -59,7 +56,15 @@ const Channels: React.FC = () => {
     loading: true,
   });
 
-  const [connecting, setConnecting] = useState<{
+  const [connecting] = useState<{
+    instagram: boolean;
+    messenger: boolean;
+  }>({
+    instagram: false,
+    messenger: false,
+  });
+
+  const [aiToggleLoading, setAiToggleLoading] = useState<{
     instagram: boolean;
     messenger: boolean;
   }>({
@@ -68,18 +73,6 @@ const Channels: React.FC = () => {
   });
 
   const [showHelp, setShowHelp] = useState(false);
-  const [toasts, setToasts] = useState<ToastMessage[]>([]);
-
-  // Show toast message
-  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
-    const id = Date.now();
-    setToasts(prev => [...prev, { message, type, id }]);
-    
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-      setToasts(prev => prev.filter(toast => toast.id !== id));
-    }, 5000);
-  };
 
   // Check for success/error params on load
   useEffect(() => {
@@ -89,23 +82,22 @@ const Channels: React.FC = () => {
     const errorDetail = params.get('detail');
 
     if (success) {
-      if (success === 'instagram') {
-        showToast('Instagram connected successfully!', 'success');
-      } else if (success === 'messenger') {
-        showToast('Messenger connected successfully!', 'success');
-      }
+      const channelName =
+        success === 'instagram' ? 'Instagram' :
+        success === 'messenger' ? 'Messenger' :
+        'Channel';
+      notifyResponse({ success: true, detail: `${channelName} connected successfully!` });
     }
 
     if (error) {
-      let errorMessage = '';
-      if (error === 'instagram') {
-        errorMessage = errorDetail ? `Instagram: ${errorDetail}` : 'Failed to connect Instagram';
-      } else if (error === 'messenger') {
-        errorMessage = errorDetail ? `Messenger: ${errorDetail}` : 'Failed to connect Messenger';
-      } else {
-        errorMessage = errorDetail || 'Connection failed';
-      }
-      showToast(errorMessage, 'error');
+      const channelName =
+        error === 'instagram' ? 'Instagram' :
+        error === 'messenger' ? 'Messenger' :
+        'Channel';
+      notifyResponse({
+        success: false,
+        detail: errorDetail || `Failed to connect ${channelName.toLowerCase()}`,
+      });
     }
 
     // Clean up URL
@@ -172,6 +164,60 @@ const Channels: React.FC = () => {
     }
   };
 
+  const handleAIToggle = async (platform: 'instagram' | 'messenger') => {
+    const isInstagram = platform === 'instagram';
+    const currentStatus = isInstagram ? instagramStatus : messengerStatus;
+    const accountInfo = currentStatus.accountInfo;
+
+    if (!accountInfo) return;
+
+    const currentEnabled = 'ai_enabled' in accountInfo ? accountInfo.ai_enabled : false;
+    const newEnabled = !currentEnabled;
+
+    setAiToggleLoading(prev => ({
+      ...prev,
+      [platform]: true,
+    }));
+
+    try {
+      const response = await api.put('/channel/auto-reply', {
+        channel_type: platform,
+        ai_enabled: newEnabled,
+      });
+
+      if (response.data?.success) {
+        if (isInstagram) {
+          setInstagramStatus(prev => prev.accountInfo ? {
+            ...prev,
+            accountInfo: {
+              ...prev.accountInfo,
+              ai_enabled: newEnabled,
+            } as AccountInfo,
+          } : prev);
+        } else {
+          setMessengerStatus(prev => prev.accountInfo ? {
+            ...prev,
+            accountInfo: {
+              ...prev.accountInfo,
+              ai_enabled: newEnabled,
+            } as AccountInfo,
+          } : prev);
+        }
+
+        notifyResponse(response.data, `AI auto-reply ${newEnabled ? 'enabled' : 'disabled'}.`);
+      } else {
+        notifyResponse(response.data ?? { success: false, detail: "Failed to update AI auto-reply setting" });
+      }
+    } catch (error) {
+      notifyResponse(error, undefined, "Failed to update AI auto-reply setting");
+    } finally {
+      setAiToggleLoading(prev => ({
+        ...prev,
+        [platform]: false,
+      }));
+    }
+  };
+
   // Generate CSRF token
   const generateCSRFToken = () => {
     return Math.random().toString(36).substring(2, 15) + 
@@ -205,23 +251,29 @@ const Channels: React.FC = () => {
     }
 
     try {
-      await api.post(`/channel/${platform}/disconnect`);
+      const response = await api.delete(`/channel/${platform}/disconnect`);
       
       if (platform === 'instagram') {
         setInstagramStatus({
           connected: false,
           loading: false,
         });
-        showToast('Instagram disconnected successfully', 'info');
       } else {
         setMessengerStatus({
           connected: false,
           loading: false,
         });
-        showToast('Messenger disconnected successfully', 'info');
       }
+
+      notifyResponse(
+        response.data ?? {
+          success: true,
+          detail: `${platform === 'instagram' ? 'Instagram' : 'Messenger'} disconnected successfully`,
+        },
+        `${platform === 'instagram' ? 'Instagram' : 'Messenger'} disconnected successfully`
+      );
     } catch (error) {
-      showToast(`Failed to disconnect ${platform} account`, 'error');
+      notifyResponse(error, undefined, `Failed to disconnect ${platform === 'instagram' ? 'Instagram' : 'Messenger'} account`);
     }
   };
 
@@ -230,7 +282,7 @@ const Channels: React.FC = () => {
     setInstagramStatus(prev => ({ ...prev, loading: true }));
     setMessengerStatus(prev => ({ ...prev, loading: true }));
     checkConnectionStatus();
-    showToast('Refreshing connection status...', 'info');
+    notifyResponse({ success: true, detail: "Refreshing connection status..." });
   };
 
   // Get platform config
@@ -282,6 +334,8 @@ const Channels: React.FC = () => {
         </div>
       );
     }
+
+    const aiEnabled = 'ai_enabled' in accountInfo ? accountInfo.ai_enabled : false;
 
     return (
       <div className="space-y-4">
@@ -357,6 +411,45 @@ const Channels: React.FC = () => {
           </dl>
         </div>
 
+        {/* AI Auto-Reply Toggle */}
+        <div className="bg-gradient-to-r from-primary-50 to-primary-100 rounded-xl p-4 border border-primary-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-start space-x-3">
+            <div className="mt-0.5 p-2 bg-white rounded-lg shadow-sm">
+              <Sparkles className="w-4 h-4 text-primary-500" />
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold text-gray-800">
+                AI Auto-Reply
+              </h4>
+              <p className="text-xs text-gray-600 mt-1 max-w-md">
+                Automatically reply to new {platform === 'instagram' ? 'Instagram DMs and story replies' : 'Messenger conversations'} using your AI assistant.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => handleAIToggle(platform)}
+            disabled={aiToggleLoading[platform]}
+            className={`relative inline-flex h-6 w-12 items-center rounded-full border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-400 ${
+              aiEnabled
+                ? 'bg-primary-500 border-primary-500 shadow-sm'
+                : 'bg-gray-200 border-gray-300'
+            } ${aiToggleLoading[platform] ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-200 flex items-center justify-center ${
+                aiEnabled ? 'translate-x-7' : 'translate-x-0.5'
+              }`}
+            >
+              
+            </span>
+            <span className="sr-only">
+              Toggle AI auto-reply for {platform}
+            </span>
+          </button>
+        </div>
+
         {/* Permissions Info */}
         <div className="flex items-center space-x-2 text-xs text-gray-500 bg-primary-50 p-3 rounded-lg">
           <CheckCircle2 className="w-4 h-4 text-primary-500" />
@@ -404,56 +497,30 @@ const Channels: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8">
-      {/* Toast Notifications */}
-      <div className="fixed top-4 right-4 z-50 space-y-2 w-96 max-w-full">
-        {toasts.map(toast => (
-          <div
-            key={toast.id}
-            className={`p-4 rounded-lg shadow-lg flex items-start space-x-3 animate-slideIn ${
-              toast.type === 'success' ? 'bg-green-50 border border-green-200' :
-              toast.type === 'error' ? 'bg-red-50 border border-red-200' :
-              'bg-blue-50 border border-blue-200'
-            }`}
-          >
-            {toast.type === 'success' && <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />}
-            {toast.type === 'error' && <XCircle className="w-5 h-5 text-red-500 flex-shrink-0" />}
-            {toast.type === 'info' && <AlertCircle className="w-5 h-5 text-blue-500 flex-shrink-0" />}
-            <p className={`text-sm ${
-              toast.type === 'success' ? 'text-green-800' :
-              toast.type === 'error' ? 'text-red-800' :
-              'text-blue-800'
-            }`}>
-              {toast.message}
+    <div className="min-h-screen bg-gray-50 px-4 py-6 md:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto space-y-6">
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800">Social Media Connections</h1>
+            <p className="text-gray-600 mt-2">
+              Connect your social media accounts to enable automated messaging and engagement
             </p>
           </div>
-        ))}
-      </div>
+          
+          <button
+            onClick={handleRefresh}
+            className="inline-flex items-center justify-center space-x-2 px-4 py-2 bg-white rounded-lg border border-gray-200 text-gray-700 hover:text-primary-500 hover:border-primary-300 transition-colors shadow-sm text-sm font-medium"
+          >
+            <RefreshCw className="w-4 h-4" />
+            <span className="hidden sm:inline">Refresh Status</span>
+          </button>
+        </div>
 
-      <div className="max-w-5xl mx-auto">
-        {/* Header Section */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800">Social Media Connections</h1>
-              <p className="text-gray-600 mt-2">
-                Connect your social media accounts to enable automated messaging and engagement
-              </p>
-            </div>
-            
-            {/* Refresh Button */}
-            <button
-              onClick={handleRefresh}
-              className="flex items-center justify-center space-x-2 px-4 py-2 bg-white rounded-lg border border-primary-200 text-gray-600 hover:text-primary-500 hover:border-primary-300 transition-all shadow-sm"
-            >
-              <RefreshCw className="w-4 h-4" />
-              <span className="hidden sm:inline">Refresh Status</span>
-            </button>
-          </div>
-
-          {/* Stats Overview */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-            <div className="bg-white rounded-xl p-4 border border-purple-100 shadow-sm">
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="bg-white rounded-xl p-4 border border-purple-100 shadow-sm">
+            <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-purple-100 rounded-lg">
                   <Instagram className="w-5 h-5 text-purple-600" />
@@ -472,8 +539,10 @@ const Channels: React.FC = () => {
                 </div>
               </div>
             </div>
-            
-            <div className="bg-white rounded-xl p-4 border border-blue-100 shadow-sm">
+          </div>
+          
+          <div className="bg-white rounded-xl p-4 border border-blue-100 shadow-sm">
+            <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-blue-100 rounded-lg">
                   <Facebook className="w-5 h-5 text-blue-600" />
@@ -496,8 +565,8 @@ const Channels: React.FC = () => {
         </div>
 
         {/* Instagram Connection Card */}
-        <div className="bg-white rounded-2xl shadow-xl border border-purple-100 overflow-hidden mb-6 transform transition-all hover:shadow-2xl">
-          <div className={`bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-4`}>
+        <div className="bg-white rounded-2xl shadow-md border border-purple-100 overflow-hidden">
+          <div className="bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-4">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
                 <Instagram className="w-6 h-6 text-white" />
@@ -509,7 +578,7 @@ const Channels: React.FC = () => {
             </div>
           </div>
 
-          <div className="p-6">
+          <div className="p-5">
             {instagramStatus.loading ? (
               <div className="flex flex-col items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-200 border-t-purple-500"></div>
@@ -534,8 +603,8 @@ const Channels: React.FC = () => {
         </div>
 
         {/* Facebook/Messenger Connection Card */}
-        <div className="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden mb-6 transform transition-all hover:shadow-2xl">
-          <div className={`bg-gradient-to-r from-blue-500 to-indigo-500 px-6 py-4`}>
+        <div className="bg-white rounded-2xl shadow-md border border-blue-100 overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-500 to-indigo-500 px-6 py-4">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
                 <Facebook className="w-6 h-6 text-white" />
@@ -547,7 +616,7 @@ const Channels: React.FC = () => {
             </div>
           </div>
 
-          <div className="p-6">
+          <div className="p-5">
             {messengerStatus.loading ? (
               <div className="flex flex-col items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 border-t-blue-500"></div>
@@ -572,10 +641,10 @@ const Channels: React.FC = () => {
         </div>
 
         {/* Help Section with Toggle */}
-        <div className="bg-white rounded-2xl shadow-lg border border-primary-100 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <button
             onClick={() => setShowHelp(!showHelp)}
-            className="w-full px-6 py-4 flex items-center justify-between hover:bg-primary-50 transition-colors"
+            className="w-full px-5 py-4 flex items-center justify-between hover:bg-primary-50 transition-colors"
           >
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-primary-100 rounded-lg">
@@ -587,7 +656,7 @@ const Channels: React.FC = () => {
           </button>
           
           {showHelp && (
-            <div className="px-6 pb-6">
+            <div className="px-5 pb-5">
               <div className="border-t border-primary-100 pt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-3">
