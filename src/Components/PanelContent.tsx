@@ -29,7 +29,6 @@ export function PanelContent({
       .finally(() => {
         localStorage.clear();
         navigate("/login");
-        window.location.reload();
       });
   }
 
@@ -80,7 +79,7 @@ export function PanelContent({
   };
 
   return (
-    <div className="flex-grow bg-gray-50 overflow-auto">
+    <div className="flex-grow bg-gray-50 h-screen overflow-y-scroll">
       {/* Top Navigation Bar */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
