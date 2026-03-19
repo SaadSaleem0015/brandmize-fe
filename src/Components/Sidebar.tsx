@@ -3,9 +3,10 @@ import { useEffect, useState } from "react";
 import { 
   Home, Menu, X, Building2, Bot, Phone, FileText, Users,
   BarChart3, CreditCard, Wallet, ChevronDown, ChevronRight,
-  PieChart, FileBarChart, GraduationCap,
-  Calendar
+  PieChart, FileBarChart, GraduationCap, Calendar, Inbox,
+  MessageSquare, Instagram, Facebook, MessageCircle
 } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 import { BsFillBookmarkDashFill } from "react-icons/bs";
 
 interface SubMenuItem {
@@ -33,7 +34,7 @@ const SidebarItem = ({
   isCollapsed?: boolean;
 }) => {
   const location = useLocation();
-  const isActive = location.pathname === to;
+  const isActive = location.pathname === to || location.pathname.startsWith(to + '/');
 
   return (
     <NavLink
@@ -166,11 +167,22 @@ export function Sidebar({
       path: "/dashboard",
       icon: <Home className="w-5 h-5" />,
     },
+     inbox: {
+      title: "Inbox",
+      path: "/inbox",
+      icon: <Inbox className="w-5 h-5" />,
+    },
+    connections: {
+      title: "Connections",
+      path: "/channels",
+      icon: <MessageSquare className="w-5 h-5" />,
+    },
     business: {
       title: "Business",
       icon: <Building2 className="w-5 h-5" />,
       subItems: [
         { title: "AI Assistants", path: "/assistant", icon: <Bot className="w-4 h-4" /> },
+        { title: "AI Chat Assistants", path: "/chat-assistant", icon: <Bot className="w-4 h-4" /> },
         { title: "Phone Numbers", path: "/getnumbers", icon: <Phone className="w-4 h-4" /> },
         { title: "Leads", path: "/files", icon: <Users className="w-4 h-4" /> },
         { title: "Knowledge Base", path: "/documents", icon: <FileText className="w-4 h-4" /> },
@@ -334,7 +346,7 @@ export function Sidebar({
       </div>
 
       {/* Navigation */}
-      <div className="p-4 flex-1">
+      <div className="p-4 flex-1  overflow-y-auto">
         {!sidebarCollapsed && (
           <div className="px-3 pb-3">
             <p className="text-xs font-medium uppercase tracking-wider text-gray-400">
@@ -352,6 +364,49 @@ export function Sidebar({
           >
             {menuSections.dashboard.title}
           </SidebarItem>
+
+           {/* Inbox - Simple Item */}
+          <SidebarItem 
+            to={menuSections.inbox.path}
+            icon={menuSections.inbox.icon}
+            isCollapsed={sidebarCollapsed}
+          >
+            {menuSections.inbox.title}
+          </SidebarItem>
+
+          <SidebarItem 
+            to={menuSections.connections.path}
+            icon={menuSections.connections.icon}
+            isCollapsed={sidebarCollapsed}
+          >
+            {menuSections.connections.title}
+          </SidebarItem>
+
+
+          
+          </div>
+
+          {/* Communication Settings Section */}
+          <div 
+            onMouseEnter={() => !sidebarCollapsed && setHoveredMenu("communication")}
+            onMouseLeave={() => setHoveredMenu(null)}
+            className="relative"
+          >
+           
+            {/* <SidebarSection
+              title={menuSections.communication.title}
+              icon={menuSections.communication.icon}
+              isExpanded={sidebarCollapsed ? hoveredMenu === "communication" : expandedMenus.has("communication")}
+              onToggle={() => toggleMenu("communication")}
+              isCollapsed={sidebarCollapsed}
+              pathPrefix="/settings"
+            >
+              {!sidebarCollapsed || hoveredMenu === "communication" ? (
+                menuSections.communication.subItems?.map((item) => 
+                  renderSubItem(item, sidebarCollapsed && hoveredMenu !== "communication", "communication")
+                )
+              ) : null}
+            </SidebarSection> */}
 
           {/* Business Section */}
           <div 
