@@ -30,7 +30,6 @@ export function AdminPanelContent({
         localStorage.clear();
         navigate("/login");
         window.location.reload();
-
       });
   }
 

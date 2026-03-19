@@ -35,13 +35,18 @@ import MakePayment from "./Pages/MakePayment";
 import CalendarIntegration from "./Pages/CalendarIntegration";
 import GetNumbers from "./Pages/GetNumbers";
 import BillingReport from "./Pages/BillingReport";
+import Inbox from "./Pages/Inbox";
+import SocialConnections from "./Pages/ChannelConnection";
+import InstagramCallback from "./Pages/ChannelInstagram";
+import MessengerCallback from "./Pages/MessengerCallback";
+import ChatAssistant from "./Pages/ChatAssistant";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: (
       <LoginChecker allowedUser="logged-in">
-          <ErrorBoundary><PanelLayout /></ErrorBoundary>
+        <ErrorBoundary><PanelLayout /></ErrorBoundary>
       </LoginChecker>
     ),
     children: [
@@ -50,13 +55,29 @@ const router = createBrowserRouter([
         element: <ErrorBoundary><Dashboard /></ErrorBoundary>,
       },
       {
+        path: "inbox",
+        element: <ErrorBoundary><Inbox /></ErrorBoundary>,
+      },
+      {
+        path: "inbox/:conversationId",
+        element: <ErrorBoundary><Inbox /></ErrorBoundary>,
+      },
+
+      {
+        path: "channels",
+        element: <ErrorBoundary><SocialConnections /></ErrorBoundary>,
+      },
+
+      { path: "/channel/instagram", element: <ErrorBoundary><InstagramCallback /></ErrorBoundary> },
+      { path: "/channel/messenger", element: <ErrorBoundary><MessengerCallback /></ErrorBoundary> },
+      {
         path: "profile",
         element: <ErrorBoundary><Profile /></ErrorBoundary>,
       },
-    //   {
-    //     path: "dashboard",
-    //     element: <ErrorBoundary><Dashboard /></ErrorBoundary>,
-    //   },
+      //   {
+      //     path: "dashboard",
+      //     element: <ErrorBoundary><Dashboard /></ErrorBoundary>,
+      //   },
       {
         path: "files",
         element: <ErrorBoundary><Files /></ErrorBoundary>,
@@ -64,6 +85,10 @@ const router = createBrowserRouter([
       {
         path: "view-leads",
         element: <ErrorBoundary><ViewLeads /></ErrorBoundary>,
+      },
+      {
+        path: "chat-assistant",
+        element: <ErrorBoundary><ChatAssistant/></ErrorBoundary>,
       },
       {
         path: "leads",
@@ -81,26 +106,26 @@ const router = createBrowserRouter([
         path: "bl-report",
         element: <ErrorBoundary><BillingReport /></ErrorBoundary>,
       },
-    //   {
-    //     path: "ghl-leads",
-    //     element: <ErrorBoundary><GhlLeads /></ErrorBoundary>,
-    //   },
- 
+      //   {
+      //     path: "ghl-leads",
+      //     element: <ErrorBoundary><GhlLeads /></ErrorBoundary>,
+      //   },
 
 
-    //   ...(!isUserRole()
-    //     ? [
-    //       {
-    //         path: "Getnumbers",
-    //         element: <ErrorBoundary><GetNumbers /></ErrorBoundary>,
-    //       },
-    //     ]
-    //     : []),
+
+      //   ...(!isUserRole()
+      //     ? [
+      //       {
+      //         path: "Getnumbers",
+      //         element: <ErrorBoundary><GetNumbers /></ErrorBoundary>,
+      //       },
+      //     ]
+      //     : []),
       {
         path: "documents",
         element: <ErrorBoundary><ViewDocuments /></ErrorBoundary>,
       },
-  
+
       {
         path: "documents/upload",
         element: <ErrorBoundary><Documents /></ErrorBoundary>,
@@ -133,30 +158,30 @@ const router = createBrowserRouter([
         path: "assistant",
         element: <ErrorBoundary><Assistant /></ErrorBoundary>,
       },
-    //   {
-    //     path: "message-chat",
-    //     element: <ErrorBoundary><ChatList /></ErrorBoundary>,
-    //   },
-    //   {
-    //     path: "appointments",
-    //     element: <ErrorBoundary><Appointments /></ErrorBoundary>,
-    //   },
-    //   {
-    //     path: "schedule",
-    //     element: <ErrorBoundary><Schedule /></ErrorBoundary>,
-    //   },
+      //   {
+      //     path: "message-chat",
+      //     element: <ErrorBoundary><ChatList /></ErrorBoundary>,
+      //   },
+      //   {
+      //     path: "appointments",
+      //     element: <ErrorBoundary><Appointments /></ErrorBoundary>,
+      //   },
+      //   {
+      //     path: "schedule",
+      //     element: <ErrorBoundary><Schedule /></ErrorBoundary>,
+      //   },
       {
         path: "report-dashboard",
         element: <ErrorBoundary><ReportDashboard /></ErrorBoundary>,
       },
-    //   {
-    //     path: "content-management",
-    //     element: <ErrorBoundary><ContentManagement /></ErrorBoundary>,
-    //   },
-    //   {
-    //     path: "events-availability",
-    //     element: <ErrorBoundary><EventsAvailability /></ErrorBoundary>,
-    //   },
+      //   {
+      //     path: "content-management",
+      //     element: <ErrorBoundary><ContentManagement /></ErrorBoundary>,
+      //   },
+      //   {
+      //     path: "events-availability",
+      //     element: <ErrorBoundary><EventsAvailability /></ErrorBoundary>,
+      //   },
       {
         path: "call-logs",
         element: <ErrorBoundary><UsageReport /></ErrorBoundary>,

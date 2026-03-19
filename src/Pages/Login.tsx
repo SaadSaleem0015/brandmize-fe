@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, MessageCircle, ArrowRight } from 'lucide-react';
 import { api, setAccessToken } from '../Helpers/BackendRequest';
-
+import { useNavigate } from 'react-router-dom';
 export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -9,6 +9,7 @@ export function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +30,7 @@ export function Login() {
         localStorage.setItem("role", String(user.role));
       }
 
-      window.location.href = user?.role === "admin" ? "/admin/dashboard" : "/dashboard";
+      navigate(user?.role === "admin" ? "/admin/dashboard" : "/dashboard");
     } catch (err: any) {
       const apiMessage =
         err.response?.data?.message ||
@@ -207,7 +208,7 @@ export function Login() {
               </div>
               <button
                 type="button"
-                onClick={() => window.location.href = '/forgot-password'}
+                onClick={() => navigate('/forgot-password')}
                 className="text-sm text-primary-600 hover:text-primary-700 font-medium transition"
                 disabled={isLoading}
               >
@@ -244,7 +245,7 @@ export function Login() {
               Don't have an account?{' '}
               <button
                 type="button"
-                onClick={() => window.location.href = '/signup'}
+                onClick={() => navigate('/signup')}
                 className="text-primary-600 hover:text-primary-700 font-semibold transition"
                 disabled={isLoading}
               >
