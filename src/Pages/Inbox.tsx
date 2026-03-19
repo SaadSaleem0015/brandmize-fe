@@ -277,7 +277,7 @@ const fetchConversations = useCallback(async () => {
       wsRef.current.close();
     }
 
-    const wsUrl = `ws://localhost:8000/api/v1/omni/ws/dashboard?token=${token}`;
+    const wsUrl = `wss://app.brandmize.net/api/v1/omni/ws/dashboard?token=${token}`;
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 

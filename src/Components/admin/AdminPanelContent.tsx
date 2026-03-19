@@ -29,6 +29,7 @@ export function AdminPanelContent({
       .finally(() => {
         localStorage.clear();
         navigate("/login");
+        window.location.reload();
       });
   }
 

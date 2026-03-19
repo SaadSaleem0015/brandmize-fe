@@ -29,6 +29,7 @@ export function PanelContent({
       .finally(() => {
         localStorage.clear();
         navigate("/login");
+        window.location.reload();
       });
   }
 

@@ -525,7 +525,7 @@ const handleSend = async () => {
       {/* Input Area */}
       <div className="flex-shrink-0 px-3 py-2.5 border-t border-gray-200 bg-white">
         <div className="flex items-center gap-2">
-          <input
+          {/* <input
             type="file"
             ref={fileInputRef}
             className="hidden"
@@ -559,7 +559,7 @@ const handleSend = async () => {
             title="Upload image"
           >
             <Image className="w-5 h-5" />
-          </button>
+          </button> */}
           
           <input
             type="text"

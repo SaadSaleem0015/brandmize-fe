@@ -229,7 +229,7 @@ const Channels: React.FC = () => {
     const csrfToken = generateCSRFToken();
     sessionStorage.setItem('instagram_csrf', csrfToken);
     
-    const instagramAuthUrl = `https://www.instagram.com/oauth/authorize?force_reauth=true&client_id=1488201336247290&redirect_uri=https://vortician.com/&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights`;
+    const instagramAuthUrl = `https://www.instagram.com/oauth/authorize?force_reauth=true&client_id=1486358803007440&redirect_uri=https://app.brandmize.net/channel/instagram&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights`;
     
     window.location.href = instagramAuthUrl;
   };
@@ -239,8 +239,11 @@ const Channels: React.FC = () => {
     const csrfToken = generateCSRFToken();
     sessionStorage.setItem('messenger_csrf', csrfToken);
     
-    const messengerAuthUrl = `https://www.facebook.com/v20.0/dialog/oauth?client_id=1442925387269173&redirect_uri=https://vortician.com/&response_type=code&scope=pages_show_list,pages_manage_metadata,pages_messaging,pages_read_engagement&state=RANDOM_CSRF_TOKEN`;
+    const messengerAuthUrl = `https://www.facebook.com/v22.0/dialog/oauth?client_id=1107315431529265&redirect_uri=https://app.brandmize.net/channel/messenger&response_type=code&scope=pages_show_list,pages_manage_metadata,pages_messaging,pages_read_engagement,business_management&state=RANDOM_CSRF_TOKEN`;
     
+
+
+
     window.location.href = messengerAuthUrl;
   };
 
