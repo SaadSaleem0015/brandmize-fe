@@ -2,9 +2,9 @@
 import axios from "axios";
 
 export const api = axios.create({
-  // baseURL: "http://localhost:8000/api/v1",
+  baseURL: "http://localhost:8000/api/v1",
   
-  baseURL: "/api/v1",
+  // baseURL: "/api/v1",
   
 
   withCredentials: true, // Required for HttpOnly cookies
@@ -113,7 +113,7 @@ api.interceptors.response.use(
       // Don't redirect for validate-token calls - let LoginChecker handle redirects
       // Only redirect for other API calls that fail after refresh attempt
       if (config.url !== '/auth/validate-token') {
-        const notLoggedInPages = ['/login', '/signup', '/forgot-password'];
+        const notLoggedInPages = ['/login', '/signup', '/forgot-password', '/verify-email'];
         if (!notLoggedInPages.includes(window.location.pathname)) {
           window.location.href = '/login';
         }

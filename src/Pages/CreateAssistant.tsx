@@ -18,8 +18,10 @@ interface AssistantData {
   model: string;
   systemPrompt: string;
   knowledgeBase: string[];
+  language: string;
   temperature: number;
   maxTokens: number;
+  leadsfile: number[];
   transcribe_provider: string;
   transcribe_language: string;
   transcribe_model: string;
@@ -28,7 +30,7 @@ interface AssistantData {
   voice_model: string;
   forwardingPhoneNumber: string;
   endCallPhrases: string[];
-  attached_Number: string | null;
+  attached_Number?: string;
   draft: boolean;
   assistant_toggle: boolean | null;
 }
@@ -51,24 +53,26 @@ const CreateAssistant: React.FC = () => {
     model: "gpt-4o-mini",
     systemPrompt: "I'm your virtual assistant. How can I help you today? I can provide information about our products, assist with placing orders, or help with any questions you may have. Just let me know what you're looking for!",
     knowledgeBase: [],
+    language: "Multilingual",
     temperature: 0.5,
     maxTokens: 250,
-    transcribe_provider: "google",
-    transcribe_language: "Multilingual",
-    transcribe_model: "gemini-2.0-flash",
+    leadsfile: [],
+    transcribe_provider: "deepgram",
+    transcribe_language: "multi",
+    transcribe_model: "nova-2",
     voice_provider: "11labs",
     voice: "21m00Tcm4TlvDq8ikWAM",
     voice_model: "eleven_flash_v2_5",
     forwardingPhoneNumber: "",
     endCallPhrases: [],
-    attached_Number: null,
+    attached_Number: undefined,
     draft: false,
     assistant_toggle: null,
   });
 
   const handleChange = (
     key: keyof AssistantData,
-    value: string | number | string[] | boolean
+    value: string | number | string[] | number[] | boolean
   ) => {
     setAssistantData((prev) => ({ ...prev, [key]: value }));
   };
@@ -85,6 +89,18 @@ const CreateAssistant: React.FC = () => {
               provider: "openai",
               model: (data as AssistantData).model || "gpt-4o-mini"
             };
+            // Map stored transcriber language to UI language selection
+            const langFromTranscriber = (() => {
+              const tLang = (updatedResponse.transcribe_language || "").toLowerCase();
+              if (tLang === "de") return "German";
+              if (tLang === "en") return "English";
+              if (tLang === "ar") return "Arabic";
+              if (tLang === "multi" || tLang === "multilingual") return "Multilingual";
+              return updatedResponse.language || "Multilingual";
+            })();
+            updatedResponse.language = langFromTranscriber;
+            // Normalize null -> undefined to match optional UI prop typing
+            updatedResponse.attached_Number = updatedResponse.attached_Number ?? undefined;
             setAssistantData(updatedResponse);
             setSelectedCategory(data.category || "contacting_lead");
           }
@@ -111,7 +127,7 @@ const CreateAssistant: React.FC = () => {
       );
       notifyResponse(data ?? {});
       if (data?.success) {
-        navigate("/assistant");
+        // navigate("/assistant");
       }
     } catch (error) {
       console.error("Failed to update assistant:", error);
@@ -148,7 +164,7 @@ const CreateAssistant: React.FC = () => {
   };
 
 
-  const isButtonsDisabled = loading || (assistantId && !isDataLoaded);
+  const isButtonsDisabled = loading || !!(assistantId && !isDataLoaded);
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
@@ -243,7 +259,7 @@ const CreateAssistant: React.FC = () => {
                           ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                           : "bg-primary-400 text-white hover:bg-primary-600 shadow-lg shadow-primary-200"
                       }`}
-                      onClick={assistantData.draft ? handlePublish : () => handleUpdate(false)}
+                      onClick={assistantData.draft ? handlePublish : () => handleUpdate()}
                       disabled={isButtonsDisabled}
                     >
                       {loading ? (

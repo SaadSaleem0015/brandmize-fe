@@ -36,7 +36,7 @@ import { notifyResponse } from '../../Helpers/notyf';
 
 interface AssistantData {
   forwardingPhoneNumber?: string;
-  attached_Number?: string; 
+  attached_Number?: string | null; 
   endCallPhrases?: string[];
 }
 interface User {

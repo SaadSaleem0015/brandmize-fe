@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Check, MessageCircle, Zap, Users, Shield } from 'lucide-react';
-import { api, setAccessToken } from '../Helpers/BackendRequest';
+import { api } from '../Helpers/BackendRequest';
 
 interface SignupFormData {
   firstName: string;
@@ -117,22 +117,12 @@ export function Signup() {
       });
 
       setSuccess(true);
-      
-      const { data: loginData } = await api.post<{ access_token: string; user?: { role?: string } }>('/auth/signin', {
-        email,
-        password,
-      });
 
-      const { access_token, user } = loginData;
-      setAccessToken(access_token);
-      localStorage.setItem('user', JSON.stringify(user));
-      if (user?.role) {
-        localStorage.setItem("role", String(user.role));
-      }
-
+      // Do not login automatically after signup.
+      // Instead, redirect the user to email verification and pre-fill their email.
       setTimeout(() => {
-        window.location.href = user?.role === "admin" ? "/admin/dashboard" : "/dashboard";
-      }, 2000);
+        window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
+      }, 800);
 
     } catch (err: any) {
       setError(
@@ -253,7 +243,7 @@ export function Signup() {
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-green-900 mb-1">Account created successfully!</h3>
-                <p className="text-green-700 text-sm">Redirecting to your dashboard...</p>
+                <p className="text-green-700 text-sm">Redirecting to email verification...</p>
               </div>
             </div>
           )}

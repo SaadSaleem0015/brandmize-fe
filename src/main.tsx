@@ -15,6 +15,7 @@ import { LoginChecker } from "./Helpers/LoginChecker";
 import NotFoundPage from "./Components/NotFound";
 import { Signup } from "./Pages/Signup";
 import { ForgotPassword } from "./Pages/ForgotPassword";
+import { VerifyEmail } from "./Pages/VerifyEmail";
 import { PanelLayout } from "./Components/PanelLayout";
 import { AdminPanelLayout } from "./Components/admin/AdminPanelLayout";
 import { AdminDashboard } from "./Pages/admin/Dashboard";
@@ -190,6 +191,14 @@ const router = createBrowserRouter([
       element: (
         <LoginChecker allowedUser="not-logged-in">
           <ErrorBoundary><Signup /></ErrorBoundary>
+        </LoginChecker>
+      ),
+    },
+    {
+      path: "/verify-email",
+      element: (
+        <LoginChecker allowedUser="not-logged-in">
+          <ErrorBoundary><VerifyEmail /></ErrorBoundary>
         </LoginChecker>
       ),
     },

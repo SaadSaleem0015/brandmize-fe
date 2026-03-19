@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Eye, EyeOff, Mail, Lock, MessageCircle, Users, Zap, Shield, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, MessageCircle, ArrowRight } from 'lucide-react';
 import { api, setAccessToken } from '../Helpers/BackendRequest';
 
 export function Login() {
@@ -31,10 +31,19 @@ export function Login() {
 
       window.location.href = user?.role === "admin" ? "/admin/dashboard" : "/dashboard";
     } catch (err: any) {
+      const apiMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.response?.data?.detail;
+
+      if (typeof apiMessage === 'string' && apiMessage.trim() === 'Please verify your email first') {
+        window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
+        return;
+      }
+
       setError(
-        err.response?.data?.message || 
-        err.response?.data?.error || 
-        'Invalid credentials. Please try again.'
+        apiMessage ||
+          'Invalid credentials. Please try again.'
       );
     } finally {
       setIsLoading(false);
@@ -51,6 +60,13 @@ export function Login() {
           alt="Login" 
           className="absolute inset-0 w-full h-full object-cover opacity-90"
         />
+              <div className="absolute top-8 left-8 z-20">
+          <img 
+            src="/logo.png" 
+            alt="BrandMize" 
+            className="h-12 w-auto"
+          />
+        </div>
         
         {/* Overlay Gradient */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent"></div>

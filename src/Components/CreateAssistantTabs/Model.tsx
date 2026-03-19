@@ -278,17 +278,32 @@ Every caller should feel cared for, respected, and confident.
 
 `;
 
+const BRANDMIZE_LANGUAGE_INSTRUCTION_COPY =
+  "Hello, you are a helpful assistant for {your business name}. Speak only {insert_languages_here}, even if the caller is speaking other languages.";
+
 interface AssistantData {
+  id?: number;
   name: string;
   provider: string;
   first_message: string;
   model: string;
   systemPrompt: string;
   knowledgeBase: string[];
+  language: string;
   temperature: number;
   maxTokens: number;
   leadsfile: number[];
-  languages?: string[];
+  transcribe_provider: string;
+  transcribe_language: string;
+  transcribe_model: string;
+  voice_provider: string;
+  voice: string;
+  voice_model: string;
+  forwardingPhoneNumber: string;
+  endCallPhrases: string[];
+  attached_Number?: string;
+  draft: boolean;
+  assistant_toggle: boolean | null;
 }
 
 interface ModelProps {
@@ -296,7 +311,7 @@ interface ModelProps {
   setAssistantData: React.Dispatch<React.SetStateAction<AssistantData>>;
   handleChange: (
     key: keyof AssistantData,
-    value: string | number | string[] | number[]
+    value: string | number | string[] | number[] | boolean
   ) => void;
 }
 
@@ -375,6 +390,38 @@ const Model: React.FC<ModelProps> = ({
       ...prev,
       [section]: !prev[section]
     }));
+  };
+
+  const handleLanguageChange = (nextLanguage: string) => {
+    handleChange("language", nextLanguage);
+
+    if (nextLanguage === "German") {
+      handleChange("transcribe_provider", "deepgram");
+      handleChange("transcribe_model", "nova-2");
+      handleChange("transcribe_language", "de");
+      return;
+    }
+
+    if (nextLanguage === "English") {
+      handleChange("transcribe_provider", "deepgram");
+      handleChange("transcribe_model", "nova-2");
+      handleChange("transcribe_language", "en");
+      return;
+    }
+
+    if (nextLanguage === "Arabic") {
+      handleChange("transcribe_provider", "google");
+      handleChange("transcribe_model", "gemini-2.0-flash");
+      handleChange("transcribe_language", "Arabic");
+      return;
+    }
+
+    if (nextLanguage === "Multilingual") {
+      handleChange("transcribe_provider", "deepgram");
+      handleChange("transcribe_model", "nova-2");
+      handleChange("transcribe_language", "multi");
+      return;
+    }
   };
 
   return (
@@ -655,7 +702,7 @@ const Model: React.FC<ModelProps> = ({
 
             {expandedSections.settings && (
               <div className="px-6 pb-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                   {/* Temperature */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
@@ -741,6 +788,62 @@ const Model: React.FC<ModelProps> = ({
                         <TbChevronDown className="w-4 h-4 text-gray-400" />
                       </div>
                     </div>
+                  </div>
+
+                  {/* Language Selection */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Language
+                    </label>
+
+                    <div className="relative">
+                      <select
+                        value={assistantData.transcribe_language || "Multilingual"}
+                        onChange={(e) => handleLanguageChange(e.target.value)}
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none"
+                      >
+                        <option value="english">English</option>
+                        <option value="German">German</option>
+                        <option value="Arabic">Arabic</option>
+                        <option value="Multilingual">Multilingual</option>
+                      </select>
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <TbChevronDown className="w-4 h-4 text-gray-400" />
+                      </div>
+                    </div>
+
+                    <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-2">
+                          <FaInfoCircle className="w-4 h-4 text-blue-600 mt-0.5" />
+                          <p className="text-xs text-blue-900 leading-relaxed">
+                            {BRANDMIZE_LANGUAGE_INSTRUCTION_COPY}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(BRANDMIZE_LANGUAGE_INSTRUCTION_COPY);
+                            notyf.success("Message copied to clipboard!");
+                          }}
+                          className="inline-flex items-center gap-1.5 px-2 py-1 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          <FaCopy className="w-3 h-3 text-gray-600" />
+                          <span className="text-xs text-gray-700">Copy</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {assistantData.language === "Multilingual" && (
+                      <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                        <div className="flex items-start gap-2">
+                          <FaExclamationTriangle className="w-4 h-4 text-amber-600 mt-0.5" />
+                          <p className="text-xs text-amber-900">
+                           Please specify the language in the system prompt for better accuracy. You can copy the text above and use it.
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
