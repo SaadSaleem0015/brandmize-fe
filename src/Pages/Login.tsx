@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, MessageCircle, ArrowRight } from 'lucide-react';
 import { api, setAccessToken } from '../Helpers/BackendRequest';
+import { useNavigate } from 'react-router-dom';
 
 export function Login() {
   const [email, setEmail] = useState('');
@@ -63,7 +64,7 @@ export function Login() {
         />
               <div className="absolute top-8 left-8 z-20">
           <img 
-            src="/logo.png" 
+            src="/Logo.png" 
             alt="BrandMize" 
             className="h-12 w-auto"
           />
