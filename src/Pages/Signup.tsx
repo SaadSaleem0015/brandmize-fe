@@ -152,7 +152,7 @@ export function Signup() {
         {/* Logo in top left corner */}
         <div className="absolute top-8 left-8 z-20">
           <img 
-            src="/logo.png" 
+            src="/Logo.png" 
             alt="BrandMize" 
             className="h-12 w-auto"
           />

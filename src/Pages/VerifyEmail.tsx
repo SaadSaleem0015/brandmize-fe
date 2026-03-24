@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Mail, CheckCircle, ArrowLeft } from "lucide-react";
+import { MessageCircle, CheckCircle, ArrowLeft } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../Helpers/BackendRequest";
 import { notyf } from "../Helpers/notyf";
@@ -63,9 +63,12 @@ export function VerifyEmail() {
 
     setIsLoading(true);
     try {
-      await api.post("/resend-verification", { email: cleanEmail });
+      const { data } = await api.post<{ success: boolean; message: string }>(
+        "/auth/resend-verification",
+        { email: cleanEmail }
+      );
       setCode("");
-      notyf.success("Code sent again");
+      notyf.success(data?.message || "Verification code sent again");
     } catch (err: any) {
       const apiMessage =
         err.response?.data?.message ||
@@ -82,16 +85,39 @@ export function VerifyEmail() {
 
   return (
     <div className="min-h-screen flex bg-white">
-      <div className="hidden lg:block lg:w-1/2 bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-800 relative overflow-hidden">
-        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:40px_40px]" />
-        <div className="absolute top-10 left-10 w-16 h-16 bg-white/20 rounded-2xl backdrop-blur-sm flex items-center justify-center border border-white/30">
-          <Mail className="w-6 h-6 text-white" />
+      {/* Left Side - Image Section (same design as Login) */}
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-primary-600 to-secondary-800">
+        {/* Background Image */}
+        <img
+          src="/login.png"
+          alt="Login"
+          className="absolute inset-0 w-full h-full object-cover opacity-90"
+        />
+
+        <div className="absolute top-8 left-8 z-20">
+          <img src="/Logo.png" alt="BrandMize" className="h-12 w-auto" />
         </div>
 
-        <div className="relative z-10 w-full flex flex-col justify-center p-12">
+        {/* Overlay Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
+
+        {/* Content Overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-12 text-white">
           <div className="max-w-lg">
-            <h2 className="text-4xl font-bold text-white mb-4">Verify your email</h2>
-            <p className="text-primary-100 text-sm">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
+                <MessageCircle className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-2xl font-bold">
+                Brand<span className="text-primary-300">Mize</span>
+              </span>
+            </div>
+
+            <h2 className="text-3xl font-bold mb-4 leading-tight">
+              Verify your email and <span className="text-primary-300">activate</span> your account
+            </h2>
+
+            <p className="text-white/90 text-sm">
               Enter the 6-digit code we sent to your inbox to finish setting up your account.
             </p>
           </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, ArrowLeft, CheckCircle, Lock, Eye, EyeOff, Key } from 'lucide-react';
+import { Mail, ArrowLeft, CheckCircle, Lock, Eye, EyeOff, MessageCircle } from 'lucide-react';
 import { api } from '../Helpers/BackendRequest';
 
 type ResetStep = 'email' | 'code' | 'newPassword' | 'success';
@@ -84,8 +84,11 @@ export function ForgotPassword() {
     setIsLoading(true);
 
     try {
-      await api.post('/password-reset-code', { email });
-      setSuccessMessage('Reset instructions sent to your email');
+      const { data } = await api.post<{ success: boolean; message: string }>(
+        '/auth/forgot-password',
+        { email: email.trim() }
+      );
+      setSuccessMessage(data?.message || 'Reset instructions sent to your email');
       startCountdown();
       setStep('code');
     } catch (err: any) {
@@ -103,23 +106,63 @@ export function ForgotPassword() {
     if (!validateResetCode()) return;
 
     setError('');
-    setSuccessMessage('Code verified successfully');
-    setStep('newPassword');
+    setSuccessMessage('');
+    setIsLoading(true);
+
+    const cleanEmail = email.trim();
+    const cleanCode = resetCode.trim();
+
+    try {
+      const { data } = await api.post<{ success: boolean; message: string }>(
+        '/auth/forgot-password/verify',
+        {
+          email: cleanEmail,
+          code: cleanCode
+        }
+      );
+
+      if (!data?.success) {
+        const message = data?.message || 'OTP verification failed.';
+        setError(message);
+        return;
+      }
+
+      setSuccessMessage(data?.message || 'OTP verified successfully');
+      setStep('newPassword');
+    } catch (err: any) {
+      const apiMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.response?.data?.detail;
+
+      const message =
+        typeof apiMessage === 'string' && apiMessage.trim()
+          ? apiMessage
+          : 'Failed to verify OTP.';
+
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleResetPassword = async () => {
     if (!validatePassword()) return;
 
     setError('');
+    setSuccessMessage('');
     setIsLoading(true);
 
     try {
-      await api.post('/reset-password', {
-        email,
-        code: resetCode,
-        password: newPassword,
-      });
-      setSuccessMessage('Password reset successfully!');
+      const { data } = await api.post<{ success: boolean; message: string }>(
+        '/auth/forgot-password/reset',
+        {
+          email: email.trim(),
+          code: resetCode.trim(),
+          password: newPassword
+        }
+      );
+      setSuccessMessage(data?.message || 'Password reset successfully!');
       setStep('success');
     } catch (err: any) {
       setError(
@@ -139,8 +182,11 @@ export function ForgotPassword() {
     setIsLoading(true);
 
     try {
-      await api.post('/password-reset-code', { email });
-      setSuccessMessage('New code sent to your email');
+      const { data } = await api.post<{ success: boolean; message: string }>(
+        '/auth/forgot-password',
+        { email: email.trim() }
+      );
+      setSuccessMessage(data?.message || 'New code sent to your email');
       startCountdown();
     } catch (err: any) {
       setError(
@@ -166,79 +212,42 @@ export function ForgotPassword() {
   return (
     <div className="min-h-screen flex bg-white">
       {/* Left Side - Visual/Hero Section */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-800 relative overflow-hidden">
-        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:40px_40px]"></div>
-        
-        {/* Decorative Elements */}
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-accent-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000"></div>
-        
-        <div className="relative z-10 w-full flex flex-col justify-between p-12">
-          {/* Logo/Brand */}
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30">
-              <Key className="w-7 h-7 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">Brand<span className="text-primary-200">Mize</span></h1>
-              <p className="text-primary-100 text-sm mt-1">Account Security</p>
-            </div>
-          </div>
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-primary-600 to-secondary-800">
+        {/* Background Image */}
+        <img
+          src="/login.png"
+          alt="Login"
+          className="absolute inset-0 w-full h-full object-cover opacity-90"
+        />
 
-          {/* Security Content */}
+        {/* Logo Overlay */}
+        <div className="absolute top-8 left-8 z-20">
+          <img src="/Logo.png" alt="BrandMize" className="h-12 w-auto" />
+        </div>
+
+        {/* Overlay Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent"></div>
+
+        {/* Content Overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-12 text-white">
           <div className="max-w-lg">
-            <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6 border border-white/20">
-              <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center">
-                <div className="w-2 h-2 bg-primary-600 rounded-full"></div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
+                <MessageCircle className="w-6 h-6 text-white" />
               </div>
-              <span className="text-white text-sm font-medium">Enterprise-grade Security</span>
+              <span className="text-2xl font-bold">
+                Brand<span className="text-primary-300">Mize</span>
+              </span>
             </div>
-            
-            <h2 className="text-4xl font-bold text-white mb-6 leading-tight">
-              Secure account
-              <br />
-              <span className="text-accent-300">access recovery</span>
-            </h2>
-            
-            <div className="space-y-4 mb-12">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                  <Lock className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-white/90">End-to-end encrypted password reset</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                  <CheckCircle className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-white/90">Two-factor verification process</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                  <Mail className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-white/90">Instant email delivery & 60-second expiry</span>
-              </div>
-            </div>
-          </div>
 
-          {/* Security Tips */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-            <h3 className="text-white font-semibold mb-3">Password Tips</h3>
-            <ul className="space-y-2">
-              <li className="text-primary-100 text-sm flex items-center">
-                <div className="w-2 h-2 bg-accent-400 rounded-full mr-3"></div>
-                Use at least 8 characters with mixed case
-              </li>
-              <li className="text-primary-100 text-sm flex items-center">
-                <div className="w-2 h-2 bg-accent-400 rounded-full mr-3"></div>
-                Include numbers and special characters
-              </li>
-              <li className="text-primary-100 text-sm flex items-center">
-                <div className="w-2 h-2 bg-accent-400 rounded-full mr-3"></div>
-                Avoid common words and personal information
-              </li>
-            </ul>
+            <h2 className="text-3xl font-bold mb-4 leading-tight">
+              Recover your account with{' '}
+              <span className="text-primary-300">secure access</span>
+            </h2>
+
+            <p className="text-white/90 text-sm">
+              Enter the OTP sent to your email and set a new password.
+            </p>
           </div>
         </div>
       </div>
@@ -541,13 +550,6 @@ export function ForgotPassword() {
                 >
                   Go to dashboard
                 </button>
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
-                <h4 className="font-semibold text-blue-900 mb-2">Security reminder</h4>
-                <p className="text-blue-700 text-sm">
-                  For added security, consider enabling two-factor authentication in your account settings.
-                </p>
               </div>
             </div>
           )}
