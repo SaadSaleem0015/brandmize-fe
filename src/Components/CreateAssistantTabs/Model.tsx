@@ -295,6 +295,7 @@ interface AssistantData {
   leadsfile: number[];
   transcribe_provider: string;
   transcribe_language: string;
+  transcriber_languages?: string[];
   transcribe_model: string;
   voice_provider: string;
   voice: string;
@@ -328,6 +329,7 @@ interface File {
 const Model: React.FC<ModelProps> = ({
   assistantData,
   handleChange,
+  setAssistantData,
 }) => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [leadsFile, setLeadsFile] = useState<File[]>([]);
@@ -385,6 +387,29 @@ const Model: React.FC<ModelProps> = ({
     handleChange("leadsfile", selectedIds);
   };
 
+  // Language options for Gladia multilingual support
+  const gladiaLanguageOptions = [
+    { value: "en", label: "🇺🇸 English" },
+    { value: "ar", label: "🇸🇦 Arabic" },
+    { value: "de", label: "🇩🇪 German" },
+    { value: "fr", label: "🇫🇷 French" },
+    { value: "es", label: "🇪🇸 Spanish" },
+    { value: "nl", label: "🇳🇱 Dutch" },
+    { value: "it", label: "🇮🇹 Italian" },
+    { value: "ja", label: "🇯🇵 Japanese" },
+    { value: "pt", label: "🇵🇹 Portuguese" },
+  ];
+
+  const handleGladiaLanguagesSelection = (
+    selectedOptions: MultiValue<{ value: string; label: string }>
+  ) => {
+    const selectedLanguages = selectedOptions.map((option) => option.value);
+    setAssistantData((prev) => ({
+      ...prev,
+      transcriber_languages: selectedLanguages,
+    }));
+  };
+
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections(prev => ({
       ...prev,
@@ -392,36 +417,48 @@ const Model: React.FC<ModelProps> = ({
     }));
   };
 
-  const handleLanguageChange = (nextLanguage: string) => {
-    handleChange("language", nextLanguage);
-
-    if (nextLanguage === "German") {
-      handleChange("transcribe_provider", "deepgram");
-      handleChange("transcribe_model", "nova-2");
-      handleChange("transcribe_language", "de");
-      return;
-    }
-
-    if (nextLanguage === "English") {
-      handleChange("transcribe_provider", "deepgram");
-      handleChange("transcribe_model", "nova-2");
-      handleChange("transcribe_language", "en");
-      return;
-    }
-
-    if (nextLanguage === "Arabic") {
-      handleChange("transcribe_provider", "google");
-      handleChange("transcribe_model", "gemini-2.0-flash");
-      handleChange("transcribe_language", "Arabic");
-      return;
-    }
-
-    if (nextLanguage === "Multilingual") {
-      handleChange("transcribe_provider", "deepgram");
-      handleChange("transcribe_model", "nova-2");
-      handleChange("transcribe_language", "multi");
-      return;
-    }
+  /** Backend codes for `language` (matches transcribe_language values sent to API). */
+  const handleLanguageChange = (code: string) => {
+    setAssistantData((prev) => {
+      const base = { ...prev, language: code };
+      if (code === "de") {
+        return {
+          ...base,
+          transcribe_provider: "deepgram",
+          transcribe_model: "nova-2",
+          transcribe_language: "de",
+          transcriber_languages: ["de"],
+        };
+      }
+      if (code === "en") {
+        return {
+          ...base,
+          transcribe_provider: "deepgram",
+          transcribe_model: "nova-2",
+          transcribe_language: "en",
+          transcriber_languages: ["en"],
+        };
+      }
+      if (code === "Arabic") {
+        return {
+          ...base,
+          transcribe_provider: "google",
+          transcribe_model: "gemini-2.0-flash",
+          transcribe_language: "Arabic",
+          transcriber_languages: ["ar"],
+        };
+      }
+      if (code === "multi") {
+        return {
+          ...base,
+          transcribe_provider: "gladia",
+          transcribe_model: "solaria-1",
+          transcribe_language: "multi",
+          transcriber_languages: [],
+        };
+      }
+      return base;
+    });
   };
 
   return (
@@ -798,19 +835,59 @@ const Model: React.FC<ModelProps> = ({
 
                     <div className="relative">
                       <select
-                        value={assistantData.transcribe_language || "Multilingual"}
+                        value={assistantData.language || "multi"}
                         onChange={(e) => handleLanguageChange(e.target.value)}
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none"
                       >
-                        <option value="english">English</option>
-                        <option value="German">German</option>
+                        <option value="en">English</option>
+                        <option value="de">German</option>
                         <option value="Arabic">Arabic</option>
-                        <option value="Multilingual">Multilingual</option>
+                        <option value="multi">Multilingual</option>
                       </select>
                       <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                         <TbChevronDown className="w-4 h-4 text-gray-400" />
                       </div>
                     </div>
+
+                    {assistantData.language === "multi" && (
+                      <div className="space-y-2 mt-4">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Select Languages
+                        </label>
+                        <Select
+                          isMulti
+                          value={gladiaLanguageOptions.filter((option) =>
+                            (assistantData.transcriber_languages || []).includes(option.value)
+                          )}
+                          options={gladiaLanguageOptions}
+                          onChange={handleGladiaLanguagesSelection}
+                          placeholder="Select languages your assistant can handle..."
+                          className="react-select-container"
+                          classNamePrefix="react-select"
+                          styles={{
+                            control: (base) => ({
+                              ...base,
+                              border: '1px solid #e5e7eb',
+                              borderRadius: '12px',
+                              padding: '2px',
+                              minHeight: '48px',
+                              backgroundColor: '#f9fafb',
+                              '&:hover': { borderColor: '#d1d5db' },
+                              '&:focus-within': { 
+                                borderColor: '#fab200', 
+                                boxShadow: '0 0 0 3px rgba(250, 178, 0, 0.1)' 
+                              }
+                            })
+                          }}
+                        />
+                        <div className="flex items-center gap-2 mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <FaCheckCircle className="w-4 h-4 text-green-600" />
+                          <p className="text-xs text-green-900">
+                            <span className="font-medium">Gladia (solaria-1)</span> is configured for multilingual support
+                          </p>
+                        </div>
+                      </div>
+                    )}
 
                     <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
                       <div className="flex items-start justify-between gap-3">
@@ -834,7 +911,7 @@ const Model: React.FC<ModelProps> = ({
                       </div>
                     </div>
 
-                    {assistantData.language === "Multilingual" && (
+                    {assistantData.language !== "multi" && assistantData.language === "multi" && (
                       <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
                         <div className="flex items-start gap-2">
                           <FaExclamationTriangle className="w-4 h-4 text-amber-600 mt-0.5" />

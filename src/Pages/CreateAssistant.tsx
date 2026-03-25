@@ -24,6 +24,7 @@ interface AssistantData {
   leadsfile: number[];
   transcribe_provider: string;
   transcribe_language: string;
+  transcriber_languages?: string[];
   transcribe_model: string;
   voice_provider: string;
   voice: string;
@@ -53,12 +54,13 @@ const CreateAssistant: React.FC = () => {
     model: "gpt-4o-mini",
     systemPrompt: "I'm your virtual assistant. How can I help you today? I can provide information about our products, assist with placing orders, or help with any questions you may have. Just let me know what you're looking for!",
     knowledgeBase: [],
-    language: "Multilingual",
+    language: "multi",
     temperature: 0.5,
     maxTokens: 250,
     leadsfile: [],
     transcribe_provider: "deepgram",
     transcribe_language: "multi",
+    transcriber_languages: [],
     transcribe_model: "nova-2",
     voice_provider: "11labs",
     voice: "21m00Tcm4TlvDq8ikWAM",
@@ -77,6 +79,40 @@ const CreateAssistant: React.FC = () => {
     setAssistantData((prev) => ({ ...prev, [key]: value }));
   };
 
+  // Helper function to prepare data for API submission
+  const prepareAssistantData = (data: AssistantData) => {
+    const preparedData = { ...data };
+    
+    // Handle Gladia multilingual languages
+    if (data.transcribe_provider === "gladia" && data.transcriber_languages) {
+      if (data.transcriber_languages.length === 0) {
+        // Remove both keys if no languages are selected
+        delete (preparedData as any).transcriber_languages;
+        delete (preparedData as any).transcriber_language;
+      } else if (data.transcriber_languages.length === 1) {
+        // Use singular key for single language
+        (preparedData as any).transcriber_language = data.transcriber_languages[0];
+        delete (preparedData as any).transcriber_languages;
+      } else {
+        // Use plural key for multiple languages
+        (preparedData as any).transcriber_languages = data.transcriber_languages;
+        delete (preparedData as any).transcriber_language;
+      }
+    } else {
+      // Remove transcriber_languages for non-gladia providers
+      delete (preparedData as any).transcriber_languages;
+    }
+    
+    // Remove undefined fields
+    Object.keys(preparedData).forEach(key => {
+      if (preparedData[key as keyof AssistantData] === undefined) {
+        delete (preparedData as any)[key];
+      }
+    });
+    
+    return preparedData;
+  };
+
   useEffect(() => {
     const fetchAssistantData = async () => {
       if (assistantId) {
@@ -89,16 +125,24 @@ const CreateAssistant: React.FC = () => {
               provider: "openai",
               model: (data as AssistantData).model || "gpt-4o-mini"
             };
-            // Map stored transcriber language to UI language selection
-            const langFromTranscriber = (() => {
-              const tLang = (updatedResponse.transcribe_language || "").toLowerCase();
-              if (tLang === "de") return "German";
-              if (tLang === "en") return "English";
-              if (tLang === "ar") return "Arabic";
-              if (tLang === "multi" || tLang === "multilingual") return "Multilingual";
-              return updatedResponse.language || "Multilingual";
+            // Keep `language` aligned with backend codes (same as transcribe_language / legacy API values)
+            const langCode = (() => {
+              const t = updatedResponse.transcribe_language || "";
+              const tLower = t.toLowerCase();
+              if (tLower === "de") return "de";
+              if (tLower === "en") return "en";
+              if (t === "Arabic" || tLower === "ar") return "Arabic";
+              if (tLower === "multi" || tLower === "multilingual") return "multi";
+              const legacy = (updatedResponse.language || "").toLowerCase();
+              if (legacy === "german" || legacy === "de") return "de";
+              if (legacy === "english" || legacy === "en") return "en";
+              if (legacy === "arabic") return "Arabic";
+              if (legacy === "multilingual") return "multi";
+              return updatedResponse.language && ["de", "en", "Arabic", "multi"].includes(updatedResponse.language)
+                ? updatedResponse.language
+                : "multi";
             })();
-            updatedResponse.language = langFromTranscriber;
+            updatedResponse.language = langCode;
             // Normalize null -> undefined to match optional UI prop typing
             updatedResponse.attached_Number = updatedResponse.attached_Number ?? undefined;
             setAssistantData(updatedResponse);
@@ -121,9 +165,10 @@ const CreateAssistant: React.FC = () => {
     if (!assistantId) return;
     setLoading(true);
     try {
+      const preparedData = prepareAssistantData(assistantData);
       const { data } = await api.put<{ success?: boolean; detail?: string }>(
         `/update_assistant/${assistantId}`,
-        { ...assistantData }
+        preparedData
       );
       notifyResponse(data ?? {});
       if (data?.success) {
@@ -141,9 +186,8 @@ const CreateAssistant: React.FC = () => {
     setLoading(true);
   
     try {
-      const { data } = await api.post("/assistants", {
-        ...assistantData,
-      });
+      const preparedData = prepareAssistantData(assistantData);
+      const { data } = await api.post("/assistants", preparedData);
   
       notifyResponse(data ?? {});
       if (data?.success) {
