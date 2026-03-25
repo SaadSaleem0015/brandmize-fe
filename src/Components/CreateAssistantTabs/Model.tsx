@@ -424,8 +424,8 @@ const Model: React.FC<ModelProps> = ({
       if (code === "de") {
         return {
           ...base,
-          transcribe_provider: "deepgram",
-          transcribe_model: "nova-2",
+          transcribe_provider: "11labs",
+          transcribe_model: "scribe_v1",
           transcribe_language: "de",
           transcriber_languages: ["de"],
         };
