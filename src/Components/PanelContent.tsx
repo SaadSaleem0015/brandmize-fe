@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Menu, LogOut, User, X, CreditCard, Bell, Settings } from "lucide-react";
+import { Menu, LogOut, User, X, Settings } from "lucide-react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { api } from "../Helpers/BackendRequest";
 
@@ -14,7 +14,6 @@ export function PanelContent({
 }: PanelContentProps) {
   const [droppedDown, setDroppedDown] = useState(false);
   const [userName, setUserName] = useState("");
-  const [unreadNotifications, setUnreadNotifications] = useState(3);
 
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -78,7 +77,9 @@ export function PanelContent({
     localStorage.removeItem("adminLogin");
     navigate("/admin/dashboard");
   };
-
+ const handleSetting = () => {
+  navigate("/profile");
+ }
   return (
     <div className="flex-grow bg-gray-50 h-screen overflow-y-scroll">
       {/* Top Navigation Bar */}
@@ -103,13 +104,9 @@ export function PanelContent({
             
             {/* Brand */}
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-r from-primary-600 to-secondary-600 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold">OC</span>
-              </div>
+                <img src="/Logo.png" alt="BrandMize" className="w-24 h-16 object-contain" />
               <div>
-                <h1 className="text-lg font-bold text-gray-900 hidden md:block">
-                  Brand<span className="text-primary-600">Mize</span>
-                </h1>
+             
                 <p className="text-xs text-gray-500 hidden md:block">Agent Dashboard</p>
               </div>
             </div>
@@ -119,9 +116,9 @@ export function PanelContent({
           <div className="flex items-center gap-4">
             {/* Notifications */}
            
+            
 
-            {/* Settings */}
-            <button className="p-2 hover:bg-gray-100 rounded-xl transition">
+              <button onClick={handleSetting}  className="p-2 hover:bg-gray-100 rounded-xl transition">
               <Settings className="w-5 h-5 text-gray-600" />
             </button>
 

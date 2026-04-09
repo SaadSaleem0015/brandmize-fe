@@ -205,7 +205,7 @@ export function Signup() {
           {/* Mobile Logo - only visible on mobile */}
           <div className="lg:hidden flex items-center justify-center mb-10">
             <img 
-              src="/logo.png" 
+              src="/Logo.png" 
               alt="BrandMize" 
               className="h-10 w-auto"
             />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FaVolumeUp, FaMicrophone, FaGlobe, FaStar } from "react-icons/fa";
-import { voiceset2, voiceset3 } from "../../Helpers/data";
+import { voiceset2, voiceset3, voiceset4 } from "../../Helpers/data";
 
 interface VoiceData {
   showName: string;
@@ -36,6 +36,7 @@ const deepgramVoices: VoiceData[] = [
 
 const elevenLabsVoicesSet2: VoiceData[] = voiceset2 as VoiceData[];
 const elevenLabsVoicesSet3: VoiceData[] = voiceset3 as VoiceData[];
+const elevenLabsVoicesSet4: VoiceData[] = voiceset4 as VoiceData[];
 
 const Voice: React.FC<VoiceProps> = ({ handleChange, assistantData }) => {
   // State for selected voice set
@@ -44,9 +45,11 @@ const Voice: React.FC<VoiceProps> = ({ handleChange, assistantData }) => {
     if (assistantData.voice_provider === "11labs") {
       const voiceInSet2 = elevenLabsVoicesSet2.find(voice => voice.name === assistantData.voice);
       const voiceInSet3 = elevenLabsVoicesSet3.find(voice => voice.name === assistantData.voice);
+      const voiceInSet4 = elevenLabsVoicesSet4.find(voice => voice.name === assistantData.voice);
       
       if (voiceInSet2) return "set2";
       if (voiceInSet3) return "set3";
+      if (voiceInSet4) return "set4";
       return "set2"; // Default to set2 for 11labs
     }
     return "set1"; // Default to set1 for deepgram
@@ -64,6 +67,8 @@ const Voice: React.FC<VoiceProps> = ({ handleChange, assistantData }) => {
         return elevenLabsVoicesSet2;
       case "set3":
         return elevenLabsVoicesSet3;
+      case "set4":
+        return elevenLabsVoicesSet4;
       default:
         return deepgramVoices;
     }
@@ -132,6 +137,8 @@ const Voice: React.FC<VoiceProps> = ({ handleChange, assistantData }) => {
         return { name: "Multilingual Set 1", provider: "ElevenLabs", icon: "🌍", color: "primary" };
       case "set3":
         return { name: "Multilingual Set 2", provider: "ElevenLabs", icon: "🌐", color: "primary" };
+      case "set4":
+        return { name: "German Voices", provider: "ElevenLabs", icon: "🇩🇪", color: "primary" };
       default:
         return { name: "English Voices", provider: "Deepgram", icon: "🇺🇸", color: "primary" };
     }
@@ -171,6 +178,7 @@ const Voice: React.FC<VoiceProps> = ({ handleChange, assistantData }) => {
                 <option value="set1">Deepgram</option>
                 <option value="set2">ElevenLabs set 1</option>
                 <option value="set3">ElevenLabs set 2</option>
+                <option value="set4">ElevenLabs German</option>
               </select>
             </div>
           </div>

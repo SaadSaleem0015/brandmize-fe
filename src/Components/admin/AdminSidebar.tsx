@@ -1,8 +1,7 @@
 import { NavLink, Link, useLocation } from "react-router-dom";
 import { ReactNode, useEffect } from "react";
 import { 
-  Home, Menu, X,
-  MessageCircle
+  Home, Menu, X
 } from "lucide-react";
 
 interface MenuItem {
@@ -189,8 +188,8 @@ export function AdminSidebar({
       <div className="p-6 flex items-center justify-between bg-primary-400 text-white">
         {!sidebarCollapsed ? (
           <Link to="/admin/dashboard" className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
-              <MessageCircle className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 overflow-hidden">
+              <img src="/Logo.png" alt="BrandMize" className="w-6 h-6 object-contain" />
             </div>
             <div>
               <h1 className="text-xl font-bold">Brand<span className="text-primary-200">Mize</span></h1>
@@ -199,8 +198,8 @@ export function AdminSidebar({
           </Link>
         ) : (
           <Link to="/admin/dashboard" className="flex justify-center items-center w-full">
-            <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
-              <MessageCircle className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 overflow-hidden">
+              <img src="/Logo.png" alt="BrandMize" className="w-6 h-6 object-contain" />
             </div>
           </Link>
         )}

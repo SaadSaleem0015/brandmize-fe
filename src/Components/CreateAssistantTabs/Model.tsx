@@ -305,6 +305,7 @@ interface AssistantData {
   attached_Number?: string;
   draft: boolean;
   assistant_toggle: boolean | null;
+  fallback_response_language: string;
 }
 
 interface ModelProps {
@@ -398,6 +399,8 @@ const Model: React.FC<ModelProps> = ({
     { value: "it", label: "🇮🇹 Italian" },
     { value: "ja", label: "🇯🇵 Japanese" },
     { value: "pt", label: "🇵🇹 Portuguese" },
+    { value: "tr", label: "🇹🇷 Turkish" },
+
   ];
 
   const handleGladiaLanguagesSelection = (
@@ -820,6 +823,40 @@ const Model: React.FC<ModelProps> = ({
                         <option value="gpt-4.1-nano">GPT-4.1 Nano</option>
                         <option value="gpt-5-nano">GPT-5 Nano</option>
                         <option value="gpt-5-mini">GPT-5 Mini</option>
+                      </select>
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <TbChevronDown className="w-4 h-4 text-gray-400" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Fallback / default response language (LLM) */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Fallback response language
+                      </label>
+                      <InfoTooltip
+                        content={
+                          <div className="text-sm">
+                            <p>Default language used for assistant text responses when no other language is detected or when fallback messages are triggered.</p>
+                          </div>
+                        }
+                      />
+                    </div>
+                    <div className="relative">
+                      <select
+                        value={assistantData.fallback_response_language || "en"}
+                        onChange={(e) =>
+                          handleChange("fallback_response_language", e.target.value)
+                        }
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none"
+                      >
+                        {gladiaLanguageOptions.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
                       </select>
                       <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                         <TbChevronDown className="w-4 h-4 text-gray-400" />

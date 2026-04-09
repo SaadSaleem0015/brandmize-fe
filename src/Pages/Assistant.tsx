@@ -165,26 +165,26 @@ const Assistant = () => {
   };
 
   const startCall = (data: FormData) => {
-    const assistantOverrides = {
-      transcriber: {
-        provider: "deepgram" as const,
-        model: "nova-2",
-        language: "en-AU" as const,
-      },
-      recordingEnabled: false,
-      variableValues: {
-        first_name: data.name,
-        last_name: "",
-        email: "",
-        mobile_no: "",
-        add_date: "",
-        custom_field_01: "",
-        custom_field_02: "",
-      },
-    };
+    // const assistantOverrides = {
+    //   transcriber: {
+    //     provider: "deepgram" as const,
+    //     model: "nova-2",
+    //     language: "en-AU" as const,
+    //   },
+    //   recordingEnabled: false,
+    //   variableValues: {
+    //     first_name: data.name,
+    //     last_name: "",
+    //     email: "",
+    //     mobile_no: "",
+    //     add_date: "",
+    //     custom_field_01: "",
+    //     custom_field_02: "",
+    //   },
+    // };
 
     try {
-      vapi.start(vapiAssitantId, assistantOverrides);
+      vapi.start(vapiAssitantId);
 
       setCallButton({
         assistantId: callAgentId,

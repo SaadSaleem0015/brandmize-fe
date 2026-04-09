@@ -34,6 +34,8 @@ interface AssistantData {
   attached_Number?: string;
   draft: boolean;
   assistant_toggle: boolean | null;
+  /** ISO-style code: en, ar, de, fr, es, nl, it, ja, pt, tr — sent as `fallback_response_language` to the API. */
+  fallback_response_language: string;
 }
 
 const CreateAssistant: React.FC = () => {
@@ -70,7 +72,21 @@ const CreateAssistant: React.FC = () => {
     attached_Number: undefined,
     draft: false,
     assistant_toggle: null,
+    fallback_response_language: "en",
   });
+
+  const FALLBACK_LANG_CODES = [
+    "en",
+    "ar",
+    "de",
+    "fr",
+    "es",
+    "nl",
+    "it",
+    "ja",
+    "pt",
+    "tr",
+  ] as const;
 
   const handleChange = (
     key: keyof AssistantData,
@@ -144,6 +160,15 @@ const CreateAssistant: React.FC = () => {
             })();
             updatedResponse.language = langCode;
             // Normalize null -> undefined to match optional UI prop typing
+            updatedResponse.fallback_response_language = (() => {
+              const raw = String(
+                (data as AssistantData & { fallback_response_language?: string })
+                  .fallback_response_language ?? "en"
+              );
+              return FALLBACK_LANG_CODES.includes(raw as (typeof FALLBACK_LANG_CODES)[number])
+                ? raw
+                : "en";
+            })();
             updatedResponse.attached_Number = updatedResponse.attached_Number ?? undefined;
             setAssistantData(updatedResponse);
             setSelectedCategory(data.category || "contacting_lead");

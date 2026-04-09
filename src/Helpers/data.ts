@@ -391,4 +391,42 @@ const voiceset3= [
     }
 ]
 
-export {voiceset2, voiceset3}
+const voiceset4 = [
+    {
+        "showName": "Otto (Casual & Normal)",
+        "name": "FTNCalFNG5bRnkkaP5Ug",
+        "voice": "11labs-eric-de",
+        "gender": "male",
+        "audioSr": "/Audios/german/voice_preview_otto - casual and normal.mp3"
+    },
+    {
+        "showName": "Leon Stern (Rich & Deep)",
+        "name": "re2r5d74PqDzicySNW0I",
+        "voice": "11labs-eric-de",
+        "gender": "male",
+        "audioSr": "/Audios/german/voice_preview_leon stern - rich and deep.mp3"
+    },
+    {
+        "showName": "Christian (Warm & Captivating)",
+        "name": "NBqeXKdZHweef6y0B67V",
+        "voice": "11labs-eric-de",
+        "gender": "male",
+        "audioSr": "/Audios/german/voice_preview_christian - warm and captivating.mp3"
+    },
+    {
+        "showName": "Leonie (Clear & Engaging)",
+        "name": "uvysWDLbKpA4XvpD3GI6",
+        "voice": "11labs-eric-de",
+        "gender": "female",
+        "audioSr": "/Audios/german/voice_preview_leonie - clear and engaging.mp3"
+    },
+    {
+        "showName": "Lea (Clear & Feminine)",
+        "name": "7eVMgwCnXydb3CikjV7a",
+        "voice": "11labs-eric-de",
+        "gender": "female",
+        "audioSr": "/Audios/german/voice_preview_lea - clear and feminine.mp3"
+    }
+]
+
+export {voiceset2, voiceset3, voiceset4}

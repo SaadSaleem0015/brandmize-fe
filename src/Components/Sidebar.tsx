@@ -3,23 +3,15 @@ import { useEffect, useState } from "react";
 import { 
   Home, Menu, X, Building2, Bot, Phone, FileText, Users,
   BarChart3, CreditCard, Wallet, ChevronDown, ChevronRight,
-  PieChart, FileBarChart, GraduationCap, Calendar, Inbox,
-  MessageSquare, Instagram, Facebook, MessageCircle
+  PieChart, FileBarChart, Calendar, Inbox,
+  MessageSquare
 } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa";
 import { BsFillBookmarkDashFill } from "react-icons/bs";
 
 interface SubMenuItem {
   title: string;
   path: string;
   icon: React.ReactNode;
-}
-
-interface MenuItem {
-  title: string;
-  path?: string;
-  icon: React.ReactNode;
-  subItems?: SubMenuItem[];
 }
 
 const SidebarItem = ({
@@ -284,7 +276,7 @@ export function Sidebar({
     });
   };
 
-  const renderSubItem = (item: SubMenuItem, isCollapsed: boolean, parentMenu: string) => (
+  const renderSubItem = (item: SubMenuItem, isCollapsed: boolean) => (
     <NavLink
       key={item.path}
       to={item.path}
@@ -320,18 +312,12 @@ export function Sidebar({
       <div className="p-6 flex items-center justify-between border-b border-gray-100">
         {!sidebarCollapsed ? (
           <Link to="/dashboard" className="flex items-center space-x-3">
-            <div className="w-9 h-9 bg-primary-100 rounded-xl flex items-center justify-center">
-              <span className="text-primary-700 font-bold text-sm">BM</span>
-            </div>
-            <div>
-              <h1 className="text-base font-semibold text-gray-900">Brand<span className="text-primary-600">Mize</span></h1>
-              <p className="text-xs text-gray-500">Agent Dashboard</p>
-            </div>
+              <img src="/Logo.png" alt="BrandMize" className="w-24 h-16 object-contain" />
           </Link>
-        ) : (
+        ) : ( 
           <Link to="/dashboard" className="flex justify-center items-center w-full">
-            <div className="w-9 h-9 bg-primary-100 rounded-xl flex items-center justify-center">
-              <span className="text-primary-700 font-bold text-sm">BM</span>
+            <div className="w-20 h-20 bg-primary-100 rounded-xl flex items-center justify-center overflow-hidden">
+              <img src="/Logo.png" alt="BrandMize" className="w-16 h-16 object-contain" />
             </div>
           </Link>
         )}
@@ -424,7 +410,7 @@ export function Sidebar({
             >
               {!sidebarCollapsed || hoveredMenu === "business" ? (
                 menuSections.business.subItems?.map((item) => 
-                  renderSubItem(item, sidebarCollapsed && hoveredMenu !== "business", "business")
+                  renderSubItem(item, sidebarCollapsed && hoveredMenu !== "business")
                 )
               ) : null}
             </SidebarSection>
@@ -446,7 +432,7 @@ export function Sidebar({
             >
               {!sidebarCollapsed || hoveredMenu === "reports" ? (
                 menuSections.reports.subItems?.map((item) => 
-                  renderSubItem(item, sidebarCollapsed && hoveredMenu !== "reports", "reports")
+                  renderSubItem(item, sidebarCollapsed && hoveredMenu !== "reports")
                 )
               ) : null}
             </SidebarSection>
@@ -468,7 +454,7 @@ export function Sidebar({
             >
               {!sidebarCollapsed || hoveredMenu === "billing" ? (
                 menuSections.billing.subItems?.map((item) => 
-                  renderSubItem(item, sidebarCollapsed && hoveredMenu !== "billing", "billing")
+                  renderSubItem(item, sidebarCollapsed && hoveredMenu !== "billing")
                 )
               ) : null}
             </SidebarSection>
