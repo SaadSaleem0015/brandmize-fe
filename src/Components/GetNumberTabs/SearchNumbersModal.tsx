@@ -21,6 +21,7 @@ export const SearchNumbersModal: React.FC<SearchNumbersModalProps> = ({
 
   const selectedCountry = twilioSupportedCountries.find((c) => c.code === country) ?? twilioSupportedCountries[0];
   const isAreaCode = selectedCountry.type === "area_code";
+  const isGermany = country === "DE";
   const fieldLabel = isAreaCode ? "Area Code" : "Contains";
   const fieldPlaceholder = isAreaCode
     ? "e.g. 415, 212, 218 (3 digits)"
@@ -67,8 +68,14 @@ export const SearchNumbersModal: React.FC<SearchNumbersModalProps> = ({
             <select
               value={country}
               onChange={(e) => {
-                setCountry(e.target.value);
-                setDigitValue("");
+                const newCountry = e.target.value;
+                setCountry(newCountry);
+                // Auto-select area code 30 for Germany
+                if (newCountry === "DE") {
+                  setDigitValue("4930");
+                } else {
+                  setDigitValue("");
+                }
               }}
               className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-gray-800"
             >
@@ -82,7 +89,10 @@ export const SearchNumbersModal: React.FC<SearchNumbersModalProps> = ({
 
           {/* Dynamic field: Area Code (3 digit) or Contains */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">{fieldLabel}</label>
+            <label className="block text-sm font-medium text-gray-700">
+              {fieldLabel}
+              {isGermany && <span className="text-gray-500 text-xs ml-2">(Auto-selected for Germany)</span>}
+            </label>
             <input
               type="text"
               inputMode="numeric"
@@ -90,12 +100,17 @@ export const SearchNumbersModal: React.FC<SearchNumbersModalProps> = ({
               maxLength={maxLength}
               value={digitValue}
               onChange={(e) => {
+                // Prevent input changes for Germany
+                if (isGermany) return;
                 const v = e.target.value.replace(/\D/g, "");
                 if (isAreaCode && v.length > 3) return;
                 setDigitValue(v);
               }}
               placeholder={fieldPlaceholder}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-gray-800"
+              disabled={isGermany}
+              className={`w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-gray-800 ${
+                isGermany ? "bg-gray-100 cursor-not-allowed" : ""
+              }`}
             />
             <p className="text-xs text-gray-500">{selectedCountry.note}</p>
           </div>

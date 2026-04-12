@@ -309,15 +309,15 @@ export function Sidebar({
   const renderMenuContent = () => (
     <>
       {/* Header - Clean, no color fill */}
-      <div className="p-6 flex items-center justify-between border-b border-gray-100">
+      <div className="p-3 flex items-center justify-between border-b border-gray-100">
         {!sidebarCollapsed ? (
           <Link to="/dashboard" className="flex items-center space-x-3">
-              <img src="/Logo.png" alt="BrandMize" className="w-24 h-16 object-contain" />
+              <img src="/Logo.png" alt="BrandMize" className="w-32 h-16 object-contain" />
           </Link>
         ) : ( 
           <Link to="/dashboard" className="flex justify-center items-center w-full">
-            <div className="w-20 h-20 bg-primary-100 rounded-xl flex items-center justify-center overflow-hidden">
-              <img src="/Logo.png" alt="BrandMize" className="w-16 h-16 object-contain" />
+            <div className="w-32 h-32 bg-primary-100 rounded-xl flex items-center justify-center overflow-hidden">
+              <img src="/Logo.png" alt="BrandMize" className="w-32 h-32 object-contain" />
             </div>
           </Link>
         )}
