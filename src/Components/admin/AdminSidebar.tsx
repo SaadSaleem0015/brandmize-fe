@@ -1,7 +1,7 @@
 import { NavLink, Link, useLocation } from "react-router-dom";
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { 
-  Home, Menu, X
+  Home, Menu, X, Phone, Users, Settings, ChevronDown
 } from "lucide-react";
 
 interface MenuItem {
@@ -25,13 +25,13 @@ const SidebarItem = ({
   onClick?: () => void;
 }) => {
   const location = useLocation();
-  const isActive = location.pathname === to;
+  const isActive = location.pathname === to || location.pathname.startsWith(to + '/');
 
   return (
     <NavLink
       to={to}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group
-        ${isActive ? "bg-primary-50 text-primary-600 border-l-4 border-primary-600" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"}
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group
+        ${isActive ? "bg-primary-50 text-primary-600 border-l-3 border-primary-500" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}
         ${isCollapsed ? "justify-center px-2.5" : ""}
       `}
       title={isCollapsed ? String(children) : undefined}
@@ -54,7 +54,55 @@ const SidebarItem = ({
   );
 };
 
-// SidebarSection kept for future nested menus (currently unused)
+interface SidebarSectionProps {
+  title: string;
+  icon: ReactNode;
+  children: ReactNode;
+  isCollapsed: boolean;
+  defaultExpanded?: boolean;
+}
+
+const SidebarSection = ({ title, icon, children, isCollapsed, defaultExpanded = false }: SidebarSectionProps) => {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+
+  if (isCollapsed) {
+    return (
+      <div className="relative group">
+        <div className="flex items-center justify-center px-3 py-2.5 rounded-lg text-gray-500 hover:bg-gray-50 hover:text-gray-900 cursor-pointer">
+          {icon}
+        </div>
+        <div className="absolute left-full top-0 ml-2 bg-white rounded-lg shadow-lg border border-gray-200 p-2 min-w-[160px] invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all z-50">
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-1.5">
+            {title}
+          </div>
+          <div className="space-y-1">
+            {children}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-2">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-base">{icon}</span>
+          <span className="text-xs font-semibold uppercase tracking-wider">{title}</span>
+        </div>
+        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+      </button>
+      {isExpanded && (
+        <div className="ml-4 mt-1 space-y-1 border-l border-gray-200 pl-3">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export function AdminSidebar({
   sidebarCollapsed,
@@ -69,68 +117,28 @@ export function AdminSidebar({
 }) {
   const location = useLocation();
 
-  // Only dashboard option for now
   const menuItems: { [key: string]: MenuItem } = {
     dashboard: {
       title: "Dashboard",
       path: "/admin/dashboard",
       icon: <Home className="w-5 h-5" />,
     },
-    // Commenting out other options for now
-    /*
-    inbox: {
-      title: "Inbox",
-      path: "/admin/inbox",
-      icon: <Inbox className="w-5 h-5" />,
+    phoneNumbers: {
+      title: "Phone Numbers",
+      path: "/admin/phone-numbers",
+      icon: <Phone className="w-5 h-5" />,
     },
-    aiAgent: {
-      title: "AI Agent",
-      path: "/admin/ai-agent",
-      icon: <Bot className="w-5 h-5" />,
-    },
-    automations: {
-      title: "Automations",
-      path: "/admin/automations",
-      icon: <Workflow className="w-5 h-5" />,
-    },
-    integrations: {
-      title: "Integrations",
-      path: "/admin/integrations",
-      icon: <Integration className="w-5 h-5" />,
-    },
-    analytics: {
-      title: "Analytics",
-      path: "/admin/analytics",
-      icon: <BarChart3 className="w-5 h-5" />,
-    },
-    teamChat: {
-      title: "Team Chat",
-      path: "/admin/team-chat",
+    users: {
+      title: "All Users",
+      path: "/admin/users",
       icon: <Users className="w-5 h-5" />,
-    },
-    crm: {
-      title: "CRM",
-      path: "/admin/crm",
-      icon: <FileText className="w-5 h-5" />,
     },
     settings: {
       title: "Settings",
       path: "/admin/settings",
       icon: <Settings className="w-5 h-5" />,
     },
-    */
   };
-
-  // reserved for future nested menu expansion
-  useEffect(() => {
-    const newExpanded = new Set<string>();
-    Object.entries(menuItems).forEach(([key, item]) => {
-      if (item.subItems) {
-        const isActive = item.subItems.some((subItem) => location.pathname.startsWith(subItem.path));
-        if (isActive) newExpanded.add(key);
-      }
-    });
-  }, [location.pathname]);
 
   useEffect(() => {
     if (mobileOpen) {
@@ -170,8 +178,6 @@ export function AdminSidebar({
     return () => window.removeEventListener("resize", handleResize);
   }, [mobileOpen, setMobileOpen]);
 
-  // toggleMenu reserved for future when more items are added
-
   const handleSidebarToggle = () => {
     setSidebarCollapsed(!sidebarCollapsed);
   };
@@ -185,43 +191,37 @@ export function AdminSidebar({
   const renderMenuContent = () => (
     <>
       {/* Header with Brand */}
-      <div className="p-6 flex items-center justify-between bg-primary-400 text-white">
+      <div className="p-5 flex items-center justify-between bg-primary-500 text-white">
         {!sidebarCollapsed ? (
-          <Link to="/admin/dashboard" className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 overflow-hidden">
-              <img src="/Logo.png" alt="BrandMize" className="w-6 h-6 object-contain" />
+          <Link to="/admin/dashboard" className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center">
+              <img src="/Logo.png" alt="BrandMize" className="w-5 h-5 object-contain" />
             </div>
             <div>
-              <h1 className="text-xl font-bold">Brand<span className="text-primary-200">Mize</span></h1>
+              <h1 className="text-lg font-bold">Brand<span className="text-primary-200">Mize</span></h1>
               <p className="text-primary-100 text-xs">Admin Portal</p>
             </div>
           </Link>
         ) : (
-          <Link to="/admin/dashboard" className="flex justify-center items-center w-full">
-            <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 overflow-hidden">
-              <img src="/Logo.png" alt="BrandMize" className="w-6 h-6 object-contain" />
+          <Link to="/admin/dashboard" className="flex justify-center w-full">
+            <div className="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center">
+              <img src="/Logo.png" alt="BrandMize" className="w-5 h-5 object-contain" />
             </div>
           </Link>
         )}
         {!sidebarCollapsed && (
           <button
             onClick={handleSidebarToggle}
-            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors"
+            className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
           >
-            <Menu className="w-5 h-5" />
+            <Menu className="w-4 h-4" />
           </button>
         )}
       </div>
 
       {/* Main Navigation */}
-      <div className="p-4 space-y-1">
-        <div className="px-3 pb-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-            Navigation
-          </p>
-        </div>
-
-        {/* Only Dashboard Option */}
+      <div className="p-3 space-y-1">
+        {/* Dashboard */}
         <SidebarItem
           to={menuItems.dashboard.path}
           icon={menuItems.dashboard.icon}
@@ -231,21 +231,61 @@ export function AdminSidebar({
           {menuItems.dashboard.title}
         </SidebarItem>
 
-        {/* Placeholder for future sections */}
-        <div className="px-3 pt-4 pb-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-            Coming Soon
-          </p>
-        </div>
-        <div className="px-3 py-2">
-          <div className="text-xs text-gray-500 italic">
-            More admin features will be added soon
-          </div>
-        </div>
+        {/* Phone Numbers */}
+        <SidebarItem
+          to={menuItems.phoneNumbers.path}
+          icon={menuItems.phoneNumbers.icon}
+          isCollapsed={sidebarCollapsed}
+          onClick={handleMobileMenuClose}
+        >
+          {menuItems.phoneNumbers.title}
+        </SidebarItem>
+
+        {/* All Users */}
+        <SidebarItem
+          to={menuItems.users.path}
+          icon={menuItems.users.icon}
+          isCollapsed={sidebarCollapsed}
+          onClick={handleMobileMenuClose}
+        >
+          {menuItems.users.title}
+        </SidebarItem>
+
+        {/* Settings */}
+        <SidebarItem
+          to={menuItems.settings.path}
+          icon={menuItems.settings.icon}
+          isCollapsed={sidebarCollapsed}
+          onClick={handleMobileMenuClose}
+        >
+          {menuItems.settings.title}
+        </SidebarItem>
       </div>
 
-      {/* Admin Status Section */}
-    
+      {/* Bottom Section - Admin Info */}
+      {!sidebarCollapsed && (
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-gray-50/50">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
+              <span className="text-primary-600 text-sm font-semibold">A</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-800 truncate">Admin User</p>
+              <p className="text-xs text-gray-500 truncate">admin@brandmize.com</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {sidebarCollapsed && (
+        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-200 bg-gray-50/50">
+          <div className="flex justify-center">
+            <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
+              <span className="text-primary-600 text-sm font-semibold">A</span>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 
@@ -261,7 +301,7 @@ export function AdminSidebar({
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:relative h-full bg-white border-r border-gray-200 shadow-sm transition-all duration-300 z-40
+        className={`fixed lg:relative h-full bg-white border-r border-gray-200 shadow-sm transition-all duration-300 z-40 flex flex-col
           ${sidebarCollapsed ? "w-16" : "w-64"}
           ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
@@ -277,32 +317,33 @@ export function AdminSidebar({
           </button>
         )}
 
-        {renderMenuContent()}
+        <div className="flex-1 flex flex-col">
+          {renderMenuContent()}
+        </div>
 
-        {/* Collapse/Expand Button - Only show when sidebar is expanded */}
+        {/* Collapse/Expand Button */}
         {!sidebarCollapsed && (
-          <div className="absolute bottom-4 left-0 right-0 px-4">
+          <div className="p-3 border-t border-gray-200">
             <button
               onClick={handleSidebarToggle}
-              className="flex items-center justify-between w-full p-3 rounded-xl bg-gray-50 hover:bg-gray-100 
+              className="flex items-center justify-between w-full p-2.5 rounded-lg bg-gray-50 hover:bg-gray-100 
                 text-gray-600 hover:text-gray-900 transition-all"
             >
-              <span className="text-sm font-medium">Collapse sidebar</span>
-              <Menu className="transform rotate-90 w-4 h-4" />
+              <span className="text-sm font-medium">Collapse</span>
+              <Menu className="w-4 h-4" />
             </button>
           </div>
         )}
 
-        {/* Expand Button - Only show when sidebar is collapsed */}
         {sidebarCollapsed && (
-          <div className="absolute bottom-4 left-0 right-0 px-3">
+          <div className="p-2 border-t border-gray-200">
             <button
               onClick={handleSidebarToggle}
-              className="flex items-center justify-center w-full p-3 rounded-xl bg-gray-50 hover:bg-gray-100 
+              className="flex items-center justify-center w-full p-2.5 rounded-lg bg-gray-50 hover:bg-gray-100 
                 text-gray-600 hover:text-gray-900 transition-all"
               title="Expand sidebar"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-4 h-4" />
             </button>
           </div>
         )}

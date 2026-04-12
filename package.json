@@ -19,6 +19,7 @@
     "@vapi-ai/web": "^2.5.2",
     "autoprefixer": "^10.4.20",
     "axios": "^1.7.9",
+    "echarts-for-react": "^3.0.6",
     "formik": "^2.4.9",
     "lucide-react": "^0.540.0",
     "notyf": "^3.10.0",

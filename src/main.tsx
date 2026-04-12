@@ -40,6 +40,7 @@ import SocialConnections from "./Pages/ChannelConnection";
 import InstagramCallback from "./Pages/ChannelInstagram";
 import MessengerCallback from "./Pages/MessengerCallback";
 import ChatAssistant from "./Pages/ChatAssistant";
+import { AdminPhoneNumbers } from "./Pages/admin/AdminPhoneNumbers";
 
 const router = createBrowserRouter([
   {
@@ -200,6 +201,10 @@ const router = createBrowserRouter([
       {
         path: "dashboard",
         element: <ErrorBoundary><AdminDashboard /></ErrorBoundary>,
+      },
+      {
+        path: "phone-numbers",
+        element: <ErrorBoundary><AdminPhoneNumbers /></ErrorBoundary>,
       },
     ],
   },
