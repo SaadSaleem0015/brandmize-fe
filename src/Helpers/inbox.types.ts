@@ -25,7 +25,7 @@ export interface Conversation {
 
 export type MessageSender = 'agent' | 'customer' | 'human_agent'; // Backend uses 'agent' for AI, 'human_agent' for human
 
-export type MessageType = 'text' | 'image' | 'file' | 'video' | 'attachment';
+export type MessageType = 'text' | 'image' | 'file' | 'video' | 'audio' | 'attachment';
 
 export type MessageStatus = 'sent' | 'delivered' | 'read';
 

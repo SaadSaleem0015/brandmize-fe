@@ -86,29 +86,6 @@ const fetchConversations = useCallback(async () => {
     }
   }, []);
 
-  // Fetch single conversation details
-  const fetchConversationDetails = useCallback(async (conversationId: number) => {
-    try {
-      // Try to get single conversation if endpoint exists
-      const response = await api.get(`/omni/conversations/${conversationId}`);
-      if (response.data) {
-        const conversation = transformConversation(response.data);
-        setConversations(prev => {
-          const existing = prev.some(c => c.id === conversation.id);
-          if (existing) {
-            return prev.map(c => c.id === conversation.id ? conversation : c);
-          } else {
-            return sortByLatest([...prev, conversation]);
-          }
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching conversation details:", error);
-      // Fallback to full refresh
-      fetchConversations();
-    }
-  }, [fetchConversations]);
-
   // Handle new message from WebSocket
   const handleNewMessage = useCallback(
     (conversationId: number, newMessage: Message) => {
@@ -183,12 +160,8 @@ const fetchConversations = useCallback(async () => {
         });
       }
       
-      // Fetch full conversation details for new conversations
-      if (!conversationsRef.current.some(c => c.id === conversationId)) {
-        fetchConversationDetails(conversationId);
-      }
     },
-    [fetchConversationDetails]
+    []
   );
 
   // Handle conversation update from WebSocket
@@ -247,12 +220,8 @@ const fetchConversations = useCallback(async () => {
         }
       });
       
-      // If this is a new conversation and we have it open, fetch its full details
-      if (activeConversationRef.current === update.id) {
-        fetchConversationDetails(update.id);
-      }
     },
-    [fetchConversationDetails]
+    []
   );
 
   // Fetch conversations
@@ -277,7 +246,9 @@ const fetchConversations = useCallback(async () => {
       wsRef.current.close();
     }
 
-    const wsUrl = `wss://app.brandmize.net/api/v1/omni/ws/dashboard?token=${token}`;
+    // const wsUrl = `wss://app.brandmize.net/api/v1/omni/ws/dashboard?token=${token}`;
+    const wsUrl = `ws://localhost:8000/api/v1/omni/ws/dashboard?token=${token}`;
+
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
@@ -444,7 +415,10 @@ const fetchConversations = useCallback(async () => {
   // Select conversation
   const handleSelectConversation = useCallback(
     (id: number) => {
-      if (activeConversationRef.current !== null && activeConversationRef.current !== id) {
+      // Already viewing this conversation — do nothing
+      if (activeConversationRef.current === id) return;
+
+      if (activeConversationRef.current !== null) {
         sendWsMessage({ event: "close_chat" });
       }
 

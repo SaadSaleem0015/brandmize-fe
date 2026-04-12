@@ -1,6 +1,6 @@
 // Components/inbox/ChatWindow.tsx
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ArrowLeft, Send, Paperclip, Image, Check, CheckCheck } from 'lucide-react';
+import { ArrowLeft, Send, Paperclip, Image, Check, CheckCheck, Play, Pause, Mic } from 'lucide-react';
 import { Instagram, Facebook } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
 import { api } from '../../Helpers/BackendRequest';
@@ -78,6 +78,109 @@ const MessageStatus = ({ status, isFromAgent }: { status?: Message['status']; is
   return (
     <div className="flex items-center">
       <Check className="w-3 h-3 text-gray-400" />
+    </div>
+  );
+};
+
+const AudioPlayer = ({ src, isFromAgent }: { src: string; isFromAgent: boolean }) => {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+
+  const togglePlay = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (playing) {
+      audio.pause();
+    } else {
+      audio.play();
+    }
+    setPlaying(!playing);
+  };
+
+  const handleTimeUpdate = () => {
+    const audio = audioRef.current;
+    if (!audio || !audio.duration) return;
+    setCurrentTime(audio.currentTime);
+    setProgress((audio.currentTime / audio.duration) * 100);
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) setDuration(audioRef.current.duration);
+  };
+
+  const handleEnded = () => {
+    setPlaying(false);
+    setProgress(0);
+    setCurrentTime(0);
+  };
+
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    const audio = audioRef.current;
+    if (!audio || !audio.duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = (e.clientX - rect.left) / rect.width;
+    audio.currentTime = ratio * audio.duration;
+  };
+
+  const fmt = (s: number) => {
+    if (!isFinite(s)) return '0:00';
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, '0')}`;
+  };
+
+  const trackBg = isFromAgent ? 'bg-primary-400' : 'bg-gray-200';
+  const fillBg  = isFromAgent ? 'bg-white'        : 'bg-primary-500';
+  const iconCls = isFromAgent ? 'text-white'       : 'text-primary-600';
+  const timeCls = isFromAgent ? 'text-primary-100' : 'text-gray-400';
+
+  return (
+    <div className="flex items-center gap-2 w-52">
+      <audio
+        ref={audioRef}
+        src={src}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={handleEnded}
+        preload="metadata"
+      />
+
+      {/* Play / Pause button */}
+      <button
+        onClick={togglePlay}
+        className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-opacity hover:opacity-80 ${
+          isFromAgent ? 'bg-white/20' : 'bg-primary-100'
+        }`}
+      >
+        {playing
+          ? <Pause className={`w-4 h-4 ${iconCls}`} />
+          : <Play  className={`w-4 h-4 ${iconCls} ml-0.5`} />
+        }
+      </button>
+
+      <div className="flex-1 flex flex-col gap-1 min-w-0">
+        {/* Progress bar */}
+        <div
+          className={`relative h-1.5 rounded-full cursor-pointer ${trackBg}`}
+          onClick={handleSeek}
+        >
+          <div
+            className={`absolute left-0 top-0 h-full rounded-full transition-all ${fillBg}`}
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+
+        {/* Time */}
+        <div className={`flex justify-between text-[10px] ${timeCls}`}>
+          <span>{fmt(currentTime)}</span>
+          <span>{fmt(duration)}</span>
+        </div>
+      </div>
+
+      <Mic className={`flex-shrink-0 w-3.5 h-3.5 ${timeCls}`} />
     </div>
   );
 };
@@ -462,24 +565,50 @@ const handleSend = async () => {
                         <img
                           src={message.media_url || ''}
                           alt="Shared"
-                          className="rounded-2xl shadow-sm border border-gray-200 max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
+                          className="rounded-2xl shadow-sm border border-gray-200 max-w-full max-h-60 object-cover cursor-pointer hover:opacity-90 transition-opacity"
                           onClick={() => message.media_url && window.open(message.media_url, '_blank')}
                         />
                       ) : (
                         <video
                           src={message.media_url || ''}
                           controls
-                          className="rounded-2xl shadow-sm border border-gray-200 max-w-full h-auto"
+                          className="rounded-2xl shadow-sm border border-gray-200 max-w-full max-h-60"
                         />
                       )}
                       <div className={`flex items-center gap-1 mt-0.5 ${
                         message.sender === 'human_agent' ? 'justify-end' : 'justify-start'
                       } text-gray-400`}>
                         <span className="text-[10px]">{formatTime(message.timestamp)}</span>
-                        <MessageStatus 
-                          status={message.status} 
-                          isFromAgent={message.sender === 'human_agent'} 
+                        <MessageStatus
+                          status={message.status}
+                          isFromAgent={message.sender === 'human_agent'}
                         />
+                      </div>
+                    </div>
+                  )}
+
+                  {message.type === 'audio' && (
+                    <div className="max-w-[72%]">
+                      <div className={`
+                        px-3 py-2.5 rounded-2xl
+                        ${message.sender === 'human_agent'
+                          ? 'bg-primary-600 text-white rounded-br-none'
+                          : 'bg-white text-gray-900 rounded-bl-none shadow-sm border border-gray-200'
+                        }
+                      `}>
+                        <AudioPlayer
+                          src={message.media_url || ''}
+                          isFromAgent={message.sender === 'human_agent'}
+                        />
+                        <div className={`flex items-center justify-end gap-1 mt-1 ${
+                          message.sender === 'human_agent' ? 'text-primary-100' : 'text-gray-400'
+                        }`}>
+                          <span className="text-[10px]">{formatTime(message.timestamp)}</span>
+                          <MessageStatus
+                            status={message.status}
+                            isFromAgent={message.sender === 'human_agent'}
+                          />
+                        </div>
                       </div>
                     </div>
                   )}

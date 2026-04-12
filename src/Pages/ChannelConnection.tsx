@@ -229,7 +229,7 @@ const Channels: React.FC = () => {
     const csrfToken = generateCSRFToken();
     sessionStorage.setItem('instagram_csrf', csrfToken);
     
-    const instagramAuthUrl = `https://www.instagram.com/oauth/authorize?force_reauth=true&client_id=1486358803007440&redirect_uri=https://app.brandmize.net/channel/instagram&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights`;
+    const instagramAuthUrl = `https://www.instagram.com/oauth/authorize?force_reauth=true&client_id=1486358803007440&redirect_uri=https://brandmize.net/channel/instagram&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights`;
     
     window.location.href = instagramAuthUrl;
   };
