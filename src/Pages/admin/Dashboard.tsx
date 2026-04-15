@@ -3,8 +3,9 @@ import {
   Search, Filter, MessageSquare, Phone, Mail,
   MoreVertical, Clock, Star, Archive, Trash2,
   Users, TrendingUp, BarChart3, Calendar, Download, Eye,
-  Bot, Workflow
+  Bot, Workflow, ChevronDown
 } from 'lucide-react';
+import ReactECharts from 'echarts-for-react';
 
 interface Conversation {
   id: string;
@@ -18,58 +19,26 @@ interface Conversation {
   avatar?: string;
 }
 
-interface StatCard {
-  title: string;
-  value: string;
-  change: string;
-  trend: 'up' | 'down';
-  icon: React.ReactNode;
-  color: string;
-}
-
 export function AdminDashboard() {
-  const [activeFilter] = useState('all');
+  const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversations, setSelectedConversations] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedPeriod, setSelectedPeriod] = useState('30d');
+  const [showPeriodDropdown, setShowPeriodDropdown] = useState(false);
 
-  // Statistics data
-  const stats: StatCard[] = [
-    {
-      title: 'Total Conversations',
-      value: '1,247',
-      change: '+12.5%',
-      trend: 'up',
-      icon: <MessageSquare className="w-6 h-6" />,
-      color: 'bg-primary-100 text-primary-600'
-    },
-    {
-      title: 'Active Agents',
-      value: '24',
-      change: '+2',
-      trend: 'up',
-      icon: <Users className="w-6 h-6" />,
-      color: 'bg-secondary-100 text-secondary-600'
-    },
-    {
-      title: 'Avg Response Time',
-      value: '2m 34s',
-      change: '-45s',
-      trend: 'down',
-      icon: <Clock className="w-6 h-6" />,
-      color: 'bg-accent-100 text-accent-600'
-    },
-    {
-      title: 'Satisfaction Rate',
-      value: '94.2%',
-      change: '+3.1%',
-      trend: 'up',
-      icon: <TrendingUp className="w-6 h-6" />,
-      color: 'bg-green-100 text-green-600'
-    }
+  const periodOptions = [
+    { value: '7d', label: 'Last 7 Days' },
+    { value: '30d', label: 'Last 30 Days' },
+    { value: '3m', label: 'Last 3 Months' },
+    { value: '6m', label: 'Last 6 Months' },
   ];
 
+  const getPeriodLabel = (value: string) => {
+    const option = periodOptions.find(opt => opt.value === value);
+    return option ? option.label : 'Last 30 Days';
+  };
 
   // Mock conversations data
   const mockConversations: Conversation[] = [
@@ -83,14 +52,29 @@ export function AdminDashboard() {
     { id: '8', name: 'Sophia Miller', department: 'Support', lastMessage: 'I need help with my recent purchase...', time: '09:30', unread: false, starred: false, assigned: false },
   ];
 
+  // Mock chart data
+  const userGrowthData = [
+    { date: 'Jan', count: 120 },
+    { date: 'Feb', count: 145 },
+    { date: 'Mar', count: 178 },
+    { date: 'Apr', count: 210 },
+    { date: 'May', count: 256 },
+    { date: 'Jun', count: 310 },
+  ];
+
+  const plData = {
+    total_call_cost: 12450,
+    total_purchased_number_cost: 8750,
+    total_call_profit: 28900,
+    total_purchased_number_profit: 15600,
+    net_profit: 23300,
+  };
+
   useEffect(() => {
-    // In real app, fetch conversations from API
     const fetchConversations = async () => {
       setIsLoading(true);
       try {
-        // const response = await api.get('/conversations');
-        // setConversations(response.data);
-        setConversations(mockConversations); // Using mock data for now
+        setConversations(mockConversations);
       } catch (error) {
         console.error('Failed to fetch conversations:', error);
       } finally {
@@ -106,8 +90,6 @@ export function AdminDashboard() {
     if (activeFilter === 'unread') return conv.unread;
     if (activeFilter === 'assigned') return conv.assigned;
     if (activeFilter === 'starred') return conv.starred;
-    if (activeFilter === 'marketing') return conv.department === 'Marketing';
-    if (activeFilter === 'support') return conv.department === 'Support';
     return true;
   }).filter(conv => 
     conv.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -124,19 +106,322 @@ export function AdminDashboard() {
 
   const handleBulkAction = (action: string) => {
     console.log(`${action} selected conversations:`, selectedConversations);
-    // Implement bulk action logic here
   };
 
+  // Chart options for user growth
+  const chartOptions = {
+    title: {
+      text: 'User Growth',
+      left: 'center',
+      top: 0,
+      textStyle: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#1f2937',
+      },
+    },
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#1f2937',
+      borderColor: '#374151',
+      borderWidth: 1,
+      textStyle: {
+        color: '#f3f4f6',
+        fontSize: 12,
+      },
+      formatter: function (params: any) {
+        return `${params[0].axisValue}<br/>Users: ${params[0].value}`;
+      },
+    },
+    grid: {
+      top: 60,
+      left: 50,
+      right: 20,
+      bottom: 30,
+      containLabel: true,
+    },
+    xAxis: {
+      type: 'category',
+      data: userGrowthData.map((item) => item.date),
+      axisLabel: { 
+        color: '#6b7280',
+        fontSize: 11,
+        fontWeight: '500',
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#e5e7eb',
+        },
+      },
+      axisTick: {
+        show: false,
+      },
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: { 
+        color: '#6b7280',
+        fontSize: 11,
+        fontWeight: '500',
+      },
+      splitLine: {
+        lineStyle: {
+          color: '#f0f0f0',
+          type: 'dashed',
+        },
+      },
+    },
+    series: [
+      {
+        name: 'Users',
+        type: 'line',
+        data: userGrowthData.map((item) => item.count),
+        smooth: true,
+        lineStyle: {
+          width: 3,
+          color: '#7032e5',
+        },
+        itemStyle: {
+          color: '#7032e5',
+        },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(112, 50, 229, 0.15)' },
+              { offset: 1, color: 'rgba(112, 50, 229, 0.02)' },
+            ],
+          },
+        },
+        animationDuration: 800,
+        symbol: 'circle',
+        symbolSize: 7,
+      },
+    ],
+  };
+
+  // Chart options for financial overview
+  const plChartOptions = {
+    title: {
+      text: 'Financial Overview',
+      left: 'center',
+      top: 0,
+      textStyle: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#1f2937',
+      },
+    },
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#1f2937',
+      borderColor: '#374151',
+      borderWidth: 1,
+      textStyle: {
+        color: '#f3f4f6',
+        fontSize: 12,
+      },
+      formatter: function (params: any) {
+        return params
+          .map(
+            (param: any) => `${param.seriesName}: $${param.value.toLocaleString()}`
+          )
+          .join('<br/>');
+      },
+    },
+    legend: {
+      data: ['Cost', 'Profit'],
+      left: 'center',
+      bottom: 5,
+      textStyle: {
+        color: '#6b7280',
+        fontSize: 12,
+        fontWeight: '500',
+      },
+      itemWidth: 25,
+      itemHeight: 12,
+    },
+    grid: {
+      top: 60,
+      left: 60,
+      right: 30,
+      bottom: 50,
+      containLabel: true,
+    },
+    xAxis: {
+      type: 'category',
+      data: ['Call Cost', 'Number Cost', 'Total Cost', 'Call Profit', 'Number Profit', 'Net Profit'],
+      axisLabel: {
+        color: '#6b7280',
+        fontSize: 11,
+        fontWeight: '500',
+        rotate: 15,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#e5e7eb',
+        },
+      },
+      axisTick: {
+        show: false,
+      },
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: {
+        color: '#6b7280',
+        fontSize: 11,
+        fontWeight: '500',
+        formatter: function (value: number) {
+          return `$${(value / 1000).toFixed(0)}k`;
+        },
+      },
+      splitLine: {
+        lineStyle: {
+          color: '#f0f0f0',
+          type: 'dashed',
+        },
+      },
+    },
+    series: [
+      {
+        name: 'Cost',
+        type: 'bar',
+        data: [
+          plData.total_call_cost,
+          plData.total_purchased_number_cost,
+          plData.total_call_cost + plData.total_purchased_number_cost,
+          0,
+          0,
+          0,
+        ],
+        barWidth: '30%',
+        itemStyle: {
+          color: '#ef4444',
+          borderRadius: [4, 4, 0, 0],
+        },
+        animationDuration: 800,
+        label: {
+          show: true,
+          position: 'top',
+          formatter: (params: any) => `$${(params.value / 1000).toFixed(0)}k`,
+          fontSize: 10,
+          color: '#ef4444',
+          fontWeight: '600',
+        },
+      },
+      {
+        name: 'Profit',
+        type: 'bar',
+        data: [
+          0,
+          0,
+          0,
+          plData.total_call_profit,
+          plData.total_purchased_number_profit,
+          plData.net_profit,
+        ],
+        barWidth: '30%',
+        itemStyle: {
+          color: '#10b981',
+          borderRadius: [4, 4, 0, 0],
+        },
+        animationDuration: 800,
+        label: {
+          show: true,
+          position: 'top',
+          formatter: (params: any) => `$${(params.value / 1000).toFixed(0)}k`,
+          fontSize: 10,
+          color: '#10b981',
+          fontWeight: '600',
+        },
+      },
+    ],
+  };
+
+  const stats = [
+    { title: 'Total Conversations', value: '1,247', change: '+12.5%', trend: 'up', icon: <MessageSquare className="w-5 h-5" /> },
+    { title: 'Active Agents', value: '24', change: '+2', trend: 'up', icon: <Users className="w-5 h-5" /> },
+    { title: 'Avg Response Time', value: '2m 34s', change: '-45s', trend: 'down', icon: <Clock className="w-5 h-5" /> },
+    { title: 'Satisfaction Rate', value: '94.2%', change: '+3.1%', trend: 'up', icon: <TrendingUp className="w-5 h-5" /> },
+  ];
+
   return (
-    <div className="w-full p-4 sm:p-6">
-      {/* Search Bar - Inline with content */}
+    <div className="min-h-screen bg-gray-100 p-6">
+      {/* Header */}
+      <div className="mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Monitor conversations, agents, and system performance</p>
+        </div>
+        
+        {/* Period Selector */}
+        <div className="relative">
+          <button
+            onClick={() => setShowPeriodDropdown(!showPeriodDropdown)}
+            className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 hover:border-gray-400 transition-colors min-w-[160px] shadow-sm"
+          >
+            <Calendar className="w-4 h-4 text-gray-500" />
+            <span className="flex-1 text-left">{getPeriodLabel(selectedPeriod)}</span>
+            <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${showPeriodDropdown ? 'rotate-180' : ''}`} />
+          </button>
+          
+          {showPeriodDropdown && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowPeriodDropdown(false)} />
+              <div className="absolute right-0 mt-2 w-full min-w-[160px] bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1">
+                {periodOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      setSelectedPeriod(option.value);
+                      setShowPeriodDropdown(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${
+                      selectedPeriod === option.value 
+                        ? 'text-primary-600 bg-primary-50' 
+                        : 'text-gray-700'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+        {stats.map((stat, idx) => (
+          <div key={idx} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-2 rounded-lg bg-gray-100 text-gray-700">
+                {stat.icon}
+              </div>
+              <span className={`text-sm font-semibold ${stat.trend === 'up' ? 'text-emerald-700' : 'text-red-700'}`}>
+                {stat.change}
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
+            <p className="text-sm text-gray-500 mt-1">{stat.title}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Search Bar */}
       <div className="mb-6">
-        <div className="flex items-center bg-gray-100 rounded-2xl px-4 py-2.5 max-w-2xl">
+        <div className="flex items-center bg-white rounded-xl px-4 py-3 border border-gray-200 shadow-sm max-w-2xl">
           <Search className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
           <input
             type="text"
             placeholder="Search conversations, contacts, messages..."
-            className="bg-transparent border-none focus:outline-none w-full placeholder-gray-400"
+            className="bg-transparent border-none focus:outline-none w-full text-gray-700 placeholder-gray-400"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -144,281 +429,37 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="w-full">
-            {/* Stats Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {stats.map((stat) => (
-                <div key={stat.title} className="bg-white rounded-2xl p-6 border border-gray-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={`p-3 rounded-xl ${stat.color}`}>
-                      {stat.icon}
-                    </div>
-                    <div className={`flex items-center text-sm font-medium ${stat.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-                      {stat.trend === 'up' ? '↗' : '↘'} {stat.change}
-                    </div>
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</h3>
-                  <p className="text-gray-600 text-sm">{stat.title}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Conversation Management */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Conversation List */}
-              <div className="lg:col-span-2">
-                <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-                  {/* Header */}
-                  <div className="p-6 border-b border-gray-200">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h2 className="text-xl font-bold text-gray-900">All Conversations</h2>
-                        <p className="text-gray-600 text-sm">Recent customer interactions</p>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <button className="p-2 hover:bg-gray-100 rounded-xl transition">
-                          <Calendar className="w-5 h-5 text-gray-600" />
-                        </button>
-                        <button className="p-2 hover:bg-gray-100 rounded-xl transition">
-                          <Download className="w-5 h-5 text-gray-600" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Bulk Actions */}
-                    {selectedConversations.length > 0 && (
-                      <div className="flex items-center space-x-3 mb-4">
-                        <span className="text-sm text-gray-600">
-                          {selectedConversations.length} selected
-                        </span>
-                        <button 
-                          onClick={() => handleBulkAction('archive')}
-                          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition"
-                        >
-                          <Archive className="w-4 h-4 inline mr-2" />
-                          Archive
-                        </button>
-                        <button 
-                          onClick={() => handleBulkAction('delete')}
-                          className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-medium transition"
-                        >
-                          <Trash2 className="w-4 h-4 inline mr-2" />
-                          Delete
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Tabs */}
-                    <div className="flex space-x-1 border-b border-gray-200">
-                      <button className={`px-4 py-2 text-sm font-medium ${activeFilter === 'all' ? 'text-primary-600 border-b-2 border-primary-600' : 'text-gray-500'}`}>
-                        All Conversations
-                      </button>
-                      <button className={`px-4 py-2 text-sm font-medium ${activeFilter === 'unread' ? 'text-primary-600 border-b-2 border-primary-600' : 'text-gray-500'}`}>
-                        Unread
-                      </button>
-                      <button className={`px-4 py-2 text-sm font-medium ${activeFilter === 'starred' ? 'text-primary-600 border-b-2 border-primary-600' : 'text-gray-500'}`}>
-                        Starred
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Conversation List */}
-                  <div className="divide-y divide-gray-100 max-h-[600px] overflow-y-auto">
-                    {isLoading ? (
-                      <div className="p-12 text-center">
-                        <div className="animate-spin w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-                        <p className="text-gray-600">Loading conversations...</p>
-                      </div>
-                    ) : filteredConversations.length === 0 ? (
-                      <div className="p-12 text-center">
-                        <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No conversations found</h3>
-                        <p className="text-gray-600">Try adjusting your search or filters</p>
-                      </div>
-                    ) : (
-                      filteredConversations.map((conv) => (
-                        <div 
-                          key={conv.id}
-                          className={`p-4 hover:bg-gray-50 transition ${conv.unread ? 'bg-blue-50' : ''} ${
-                            selectedConversations.includes(conv.id) ? 'bg-primary-50' : ''
-                          }`}
-                        >
-                          <div className="flex items-start space-x-4">
-                            <input
-                              type="checkbox"
-                              checked={selectedConversations.includes(conv.id)}
-                              onChange={() => toggleSelectConversation(conv.id)}
-                              className="mt-1"
-                            />
-                            
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center space-x-3">
-                                  <div className="w-8 h-8 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                                    {conv.name.charAt(0)}
-                                  </div>
-                                  <div>
-                                    <div className="flex items-center space-x-2">
-                                      <h3 className="font-medium text-gray-900">{conv.name}</h3>
-                                      {conv.assigned && (
-                                        <span className="px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full">
-                                          Assigned
-                                        </span>
-                                      )}
-                                    </div>
-                                    <p className="text-sm text-gray-500">{conv.department}</p>
-                                  </div>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-sm text-gray-500">{conv.time}</span>
-                                  <button className="p-1 hover:bg-gray-200 rounded transition">
-                                    {conv.starred ? (
-                                      <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                                    ) : (
-                                      <Star className="w-4 h-4 text-gray-400" />
-                                    )}
-                                  </button>
-                                  <button className="p-1 hover:bg-gray-200 rounded transition">
-                                    <MoreVertical className="w-4 h-4 text-gray-400" />
-                                  </button>
-                                </div>
-                              </div>
-                              <p className={`text-sm truncate ${conv.unread ? 'font-medium text-gray-900' : 'text-gray-600'}`}>
-                                {conv.lastMessage}
-                              </p>
-                              <div className="flex items-center space-x-4 mt-3">
-                                <button className="text-sm text-primary-600 hover:text-primary-700 font-medium">
-                                  <MessageSquare className="w-4 h-4 inline mr-1" />
-                                  Reply
-                                </button>
-                                <button className="text-sm text-gray-600 hover:text-gray-700 font-medium">
-                                  <Phone className="w-4 h-4 inline mr-1" />
-                                  Call
-                                </button>
-                                <button className="text-sm text-gray-600 hover:text-gray-700 font-medium">
-                                  <Eye className="w-4 h-4 inline mr-1" />
-                                  View
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Sidebar - Quick Stats & Actions */}
-              <div className="space-y-6">
-                {/* AI Agent Status */}
-                <div className="bg-white rounded-2xl border border-gray-200 p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="font-bold text-gray-900">AI Agent Status</h3>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-sm text-gray-600">Active</span>
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
-                          <Bot className="w-5 h-5 text-primary-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">Support Agent</p>
-                          <p className="text-sm text-gray-600">AI Chatbot</p>
-                        </div>
-                      </div>
-                      <span className="text-sm font-medium text-green-600">Online</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-secondary-100 rounded-xl flex items-center justify-center">
-                          <Bot className="w-5 h-5 text-secondary-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">Sales Agent</p>
-                          <p className="text-sm text-gray-600">WhatsApp Auto</p>
-                        </div>
-                      </div>
-                      <span className="text-sm font-medium text-green-600">Online</span>
-                    </div>
-                  </div>
-                  <button className="w-full mt-6 bg-primary-400 hover:bg-primary-600 text-white font-semibold py-3 px-4 rounded-xl transition">
-                    Configure AI Agent
-                  </button>
-                </div>
-
-                {/* Quick Actions */}
-                <div className="bg-white rounded-2xl border border-gray-200 p-6">
-                  <h3 className="font-bold text-gray-900 mb-6">Quick Actions</h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button className="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition flex flex-col items-center">
-                      <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center mb-2">
-                        <Workflow className="w-5 h-5 text-primary-600" />
-                      </div>
-                      <span className="text-sm font-medium text-gray-900">Automation</span>
-                    </button>
-                    <button className="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition flex flex-col items-center">
-                      <div className="w-10 h-10 bg-secondary-100 rounded-xl flex items-center justify-center mb-2">
-                        <BarChart3 className="w-5 h-5 text-secondary-600" />
-                      </div>
-                      <span className="text-sm font-medium text-gray-900">Integrations</span>
-                    </button>
-                    <button className="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition flex flex-col items-center">
-                      <div className="w-10 h-10 bg-accent-100 rounded-xl flex items-center justify-center mb-2">
-                        <BarChart3 className="w-5 h-5 text-accent-600" />
-                      </div>
-                      <span className="text-sm font-medium text-gray-900">Analytics</span>
-                    </button>
-                    <button className="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition flex flex-col items-center">
-                      <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center mb-2">
-                        <Users className="w-5 h-5 text-green-600" />
-                      </div>
-                      <span className="text-sm font-medium text-gray-900">Team</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Recent Activity */}
-                <div className="bg-white rounded-2xl border border-gray-200 p-6">
-                  <h3 className="font-bold text-gray-900 mb-6">Recent Activity</h3>
-                  <div className="space-y-4">
-                    <div className="flex items-start space-x-3">
-                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <BarChart3 className="w-4 h-4 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">AI Agent responded</p>
-                        <p className="text-xs text-gray-500">2 minutes ago</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Mail className="w-4 h-4 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">New email conversation</p>
-                        <p className="text-xs text-gray-500">15 minutes ago</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Phone className="w-4 h-4 text-purple-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Missed call logged</p>
-                        <p className="text-xs text-gray-500">1 hour ago</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+          <ReactECharts option={chartOptions} style={{ height: "360px" }} />
+        </div>
+        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+          <ReactECharts option={plChartOptions} style={{ height: "360px" }} />
+        </div>
       </div>
+
+
+      {/* Bottom Actions */}
+      <div className="mt-6 bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+        <h3 className="text-sm font-semibold text-gray-800 mb-3">System Actions</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { name: "Reports", icon: "📊", color: "bg-primary-50 text-primary-700 hover:bg-primary-100" },
+            { name: "Users", icon: "👥", color: "bg-secondary-50 text-secondary-700 hover:bg-secondary-100" },
+            { name: "Settings", icon: "⚙️", color: "bg-gray-100 text-gray-700 hover:bg-gray-200" },
+            { name: "Logs", icon: "📋", color: "bg-amber-50 text-amber-700 hover:bg-amber-100" },
+          ].map((action, index) => (
+            <button
+              key={index}
+              className={`${action.color} p-3 rounded-lg transition-colors duration-200 flex flex-col items-center gap-1.5 border border-transparent`}
+            >
+              <span className="text-lg">{action.icon}</span>
+              <span className="text-xs font-medium">{action.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

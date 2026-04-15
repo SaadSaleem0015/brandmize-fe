@@ -96,10 +96,8 @@ export function AdminPanelContent({
                 <img src="/Logo.png" alt="BrandMize" className="w-5 h-5 object-contain" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-gray-900">
-                  Admin<span className="text-secondary-600">Console</span>
-                </h1>
-                <p className="text-xs text-gray-500">Super Administrator</p>
+            
+                <p className="text-sm font-bold text-gray-500">Super Administrator</p>
               </div>
             </div>
           </div>
