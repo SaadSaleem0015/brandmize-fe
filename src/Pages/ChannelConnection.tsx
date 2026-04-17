@@ -1,10 +1,10 @@
 // pages/Channels.tsx
 import React, { useState, useEffect } from 'react';
-import { 
-  Instagram, 
-  Facebook, 
-  CheckCircle, 
-  RefreshCw, 
+import {
+  Instagram,
+  Facebook,
+  CheckCircle,
+  RefreshCw,
   AlertCircle,
   Building2,
   Link2,
@@ -13,10 +13,19 @@ import {
   ChevronDown,
   HelpCircle,
   CheckCircle2,
-  Sparkles
+  Sparkles,
+  X,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { api } from "../Helpers/BackendRequest";
 import { notifyResponse } from "../Helpers/notyf";
+
+const WhatsAppIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+  </svg>
+);
 
 // Types
 interface InstagramAccountInfo {
@@ -36,7 +45,15 @@ interface MessengerAccountInfo {
   ai_enabled: boolean;
 }
 
-type AccountInfo = InstagramAccountInfo | MessengerAccountInfo;
+interface WhatsAppAccountInfo {
+  phone_number_id: string;
+  display_phone_number: string;
+  verified_name: string;
+  channel_type: 'whatsapp';
+  ai_enabled: boolean;
+}
+
+type AccountInfo = InstagramAccountInfo | MessengerAccountInfo | WhatsAppAccountInfo;
 
 interface ConnectionStatus {
   connected: boolean;
@@ -50,8 +67,13 @@ const Channels: React.FC = () => {
     connected: false,
     loading: true,
   });
-  
+
   const [messengerStatus, setMessengerStatus] = useState<ConnectionStatus>({
+    connected: false,
+    loading: true,
+  });
+
+  const [whatsappStatus, setWhatsappStatus] = useState<ConnectionStatus>({
     connected: false,
     loading: true,
   });
@@ -67,10 +89,17 @@ const Channels: React.FC = () => {
   const [aiToggleLoading, setAiToggleLoading] = useState<{
     instagram: boolean;
     messenger: boolean;
+    whatsapp: boolean;
   }>({
     instagram: false,
     messenger: false,
+    whatsapp: false,
   });
+
+  const [showWhatsAppForm, setShowWhatsAppForm] = useState(false);
+  const [whatsappForm, setWhatsappForm] = useState({ phone_number_id: '', access_token: '' });
+  const [whatsappConnecting, setWhatsappConnecting] = useState(false);
+  const [showToken, setShowToken] = useState(false);
 
   const [showHelp, setShowHelp] = useState(false);
 
@@ -162,11 +191,38 @@ const Channels: React.FC = () => {
         });
       }
     }
+
+    // Check WhatsApp connection
+    try {
+      const whatsappResponse = await api.get('/channel/whatsapp/account-info');
+      if (whatsappResponse.data) {
+        setWhatsappStatus({
+          connected: true,
+          accountInfo: whatsappResponse.data,
+          loading: false,
+        });
+      }
+    } catch (error: any) {
+      if (error.response?.status !== 404 && error.response?.status !== 401) {
+        setWhatsappStatus({
+          connected: false,
+          loading: false,
+          error: 'Failed to fetch WhatsApp connection status',
+        });
+      } else {
+        setWhatsappStatus({
+          connected: false,
+          loading: false,
+        });
+      }
+    }
   };
 
-  const handleAIToggle = async (platform: 'instagram' | 'messenger') => {
-    const isInstagram = platform === 'instagram';
-    const currentStatus = isInstagram ? instagramStatus : messengerStatus;
+  const handleAIToggle = async (platform: 'instagram' | 'messenger' | 'whatsapp') => {
+    const currentStatus =
+      platform === 'instagram' ? instagramStatus :
+      platform === 'messenger' ? messengerStatus :
+      whatsappStatus;
     const accountInfo = currentStatus.accountInfo;
 
     if (!accountInfo) return;
@@ -186,23 +242,14 @@ const Channels: React.FC = () => {
       });
 
       if (response.data?.success) {
-        if (isInstagram) {
-          setInstagramStatus(prev => prev.accountInfo ? {
-            ...prev,
-            accountInfo: {
-              ...prev.accountInfo,
-              ai_enabled: newEnabled,
-            } as AccountInfo,
-          } : prev);
-        } else {
-          setMessengerStatus(prev => prev.accountInfo ? {
-            ...prev,
-            accountInfo: {
-              ...prev.accountInfo,
-              ai_enabled: newEnabled,
-            } as AccountInfo,
-          } : prev);
-        }
+        const setter =
+          platform === 'instagram' ? setInstagramStatus :
+          platform === 'messenger' ? setMessengerStatus :
+          setWhatsappStatus;
+        setter(prev => prev.accountInfo ? {
+          ...prev,
+          accountInfo: { ...prev.accountInfo, ai_enabled: newEnabled } as AccountInfo,
+        } : prev);
 
         notifyResponse(response.data, `AI auto-reply ${newEnabled ? 'enabled' : 'disabled'}.`);
       } else {
@@ -248,35 +295,58 @@ const Channels: React.FC = () => {
   };
 
   // Handle disconnect
-  const handleDisconnect = async (platform: 'instagram' | 'messenger') => {
-    if (!window.confirm(`Are you sure you want to disconnect your ${platform === 'instagram' ? 'Instagram' : 'Messenger'} account?`)) {
+  const handleDisconnect = async (platform: 'instagram' | 'messenger' | 'whatsapp') => {
+    const platformName = platform === 'instagram' ? 'Instagram' : platform === 'messenger' ? 'Messenger' : 'WhatsApp';
+    if (!window.confirm(`Are you sure you want to disconnect your ${platformName} account?`)) {
       return;
     }
 
     try {
       const response = await api.delete(`/channel/${platform}/disconnect`);
-      
+
       if (platform === 'instagram') {
-        setInstagramStatus({
-          connected: false,
-          loading: false,
-        });
+        setInstagramStatus({ connected: false, loading: false });
+      } else if (platform === 'messenger') {
+        setMessengerStatus({ connected: false, loading: false });
       } else {
-        setMessengerStatus({
-          connected: false,
-          loading: false,
-        });
+        setWhatsappStatus({ connected: false, loading: false });
       }
 
       notifyResponse(
-        response.data ?? {
-          success: true,
-          detail: `${platform === 'instagram' ? 'Instagram' : 'Messenger'} disconnected successfully`,
-        },
-        `${platform === 'instagram' ? 'Instagram' : 'Messenger'} disconnected successfully`
+        response.data ?? { success: true, detail: `${platformName} disconnected successfully` },
+        `${platformName} disconnected successfully`
       );
     } catch (error) {
-      notifyResponse(error, undefined, `Failed to disconnect ${platform === 'instagram' ? 'Instagram' : 'Messenger'} account`);
+      notifyResponse(error, undefined, `Failed to disconnect ${platformName} account`);
+    }
+  };
+
+  // Handle WhatsApp connect
+  const handleWhatsAppConnect = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!whatsappForm.phone_number_id.trim() || !whatsappForm.access_token.trim()) return;
+
+    setWhatsappConnecting(true);
+    try {
+      const response = await api.post('/channel/whatsapp/connect', {
+        phone_number_id: whatsappForm.phone_number_id.trim(),
+        access_token: whatsappForm.access_token.trim(),
+      });
+
+      if (response.data) {
+        setWhatsappStatus({
+          connected: true,
+          accountInfo: response.data,
+          loading: false,
+        });
+        setShowWhatsAppForm(false);
+        setWhatsappForm({ phone_number_id: '', access_token: '' });
+        notifyResponse({ success: true, detail: 'WhatsApp connected successfully!' });
+      }
+    } catch (error) {
+      notifyResponse(error, undefined, 'Failed to connect WhatsApp');
+    } finally {
+      setWhatsappConnecting(false);
     }
   };
 
@@ -284,12 +354,13 @@ const Channels: React.FC = () => {
   const handleRefresh = () => {
     setInstagramStatus(prev => ({ ...prev, loading: true }));
     setMessengerStatus(prev => ({ ...prev, loading: true }));
+    setWhatsappStatus(prev => ({ ...prev, loading: true }));
     checkConnectionStatus();
     notifyResponse({ success: true, detail: "Refreshing connection status..." });
   };
 
   // Get platform config
-  const getPlatformConfig = (platform: 'instagram' | 'messenger') => {
+  const getPlatformConfig = (platform: 'instagram' | 'messenger' | 'whatsapp') => {
     if (platform === 'instagram') {
       return {
         icon: Instagram,
@@ -301,7 +372,7 @@ const Channels: React.FC = () => {
         borderColor: 'border-purple-200',
         hoverColor: 'hover:from-purple-600 hover:to-pink-600',
       };
-    } else {
+    } else if (platform === 'messenger') {
       return {
         icon: Facebook,
         name: 'Messenger',
@@ -312,11 +383,22 @@ const Channels: React.FC = () => {
         borderColor: 'border-blue-200',
         hoverColor: 'hover:from-blue-600 hover:to-indigo-600',
       };
+    } else {
+      return {
+        icon: WhatsAppIcon,
+        name: 'WhatsApp',
+        gradient: 'from-green-500 to-emerald-500',
+        lightGradient: 'from-green-50 to-emerald-50',
+        bgColor: 'bg-gradient-to-r from-green-500 to-emerald-500',
+        textColor: 'text-green-600',
+        borderColor: 'border-green-200',
+        hoverColor: 'hover:from-green-600 hover:to-emerald-600',
+      };
     }
   };
 
   // Render account info
-  const renderAccountInfo = (platform: 'instagram' | 'messenger', status: ConnectionStatus) => {
+  const renderAccountInfo = (platform: 'instagram' | 'messenger' | 'whatsapp', status: ConnectionStatus) => {
     const config = getPlatformConfig(platform);
     const accountInfo = status.accountInfo;
 
@@ -363,7 +445,9 @@ const Channels: React.FC = () => {
             {/* Account Details */}
             <div>
               <h3 className="font-semibold text-lg text-gray-800">
-                {accountInfo.name}
+                {platform === 'whatsapp'
+                  ? (accountInfo as WhatsAppAccountInfo).verified_name
+                  : (accountInfo as InstagramAccountInfo | MessengerAccountInfo).name}
               </h3>
               {platform === 'instagram' && (accountInfo as InstagramAccountInfo).username && (
                 <p className="text-sm text-gray-500">
@@ -373,6 +457,11 @@ const Channels: React.FC = () => {
               {platform === 'messenger' && (accountInfo as MessengerAccountInfo).category && (
                 <p className="text-sm text-gray-500">
                   {(accountInfo as MessengerAccountInfo).category}
+                </p>
+              )}
+              {platform === 'whatsapp' && (
+                <p className="text-sm text-gray-500">
+                  {(accountInfo as WhatsAppAccountInfo).display_phone_number}
                 </p>
               )}
             </div>
@@ -402,8 +491,14 @@ const Channels: React.FC = () => {
           </h4>
           <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-white p-3 rounded-lg">
-              <dt className="text-xs text-gray-500 mb-1">App ID</dt>
-              <dd className="text-sm font-mono text-gray-800 break-all">{accountInfo.app_id}</dd>
+              <dt className="text-xs text-gray-500 mb-1">
+                {platform === 'whatsapp' ? 'Phone Number ID' : 'App ID'}
+              </dt>
+              <dd className="text-sm font-mono text-gray-800 break-all">
+                {platform === 'whatsapp'
+                  ? (accountInfo as WhatsAppAccountInfo).phone_number_id
+                  : (accountInfo as InstagramAccountInfo | MessengerAccountInfo).app_id}
+              </dd>
             </div>
             <div className="bg-white p-3 rounded-lg">
               <dt className="text-xs text-gray-500 mb-1">Channel Type</dt>
@@ -425,7 +520,7 @@ const Channels: React.FC = () => {
                 AI Auto-Reply
               </h4>
               <p className="text-xs text-gray-600 mt-1 max-w-md">
-                Automatically reply to new {platform === 'instagram' ? 'Instagram DMs and story replies' : 'Messenger conversations'} using your AI assistant.
+                Automatically reply to new {platform === 'instagram' ? 'Instagram DMs and story replies' : platform === 'messenger' ? 'Messenger conversations' : 'WhatsApp messages'} using your AI assistant.
               </p>
             </div>
           </div>
@@ -521,47 +616,63 @@ const Channels: React.FC = () => {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-white rounded-xl p-4 border border-purple-100 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Instagram className="w-5 h-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Instagram</p>
-                  <p className="text-lg font-semibold text-gray-800">
-                    {instagramStatus.loading ? (
-                      <span className="text-gray-400">Checking...</span>
-                    ) : instagramStatus.connected ? (
-                      <span className="text-green-600">Connected</span>
-                    ) : (
-                      <span className="text-gray-600">Not Connected</span>
-                    )}
-                  </p>
-                </div>
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Instagram className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Instagram</p>
+                <p className="text-lg font-semibold text-gray-800">
+                  {instagramStatus.loading ? (
+                    <span className="text-gray-400">Checking...</span>
+                  ) : instagramStatus.connected ? (
+                    <span className="text-green-600">Connected</span>
+                  ) : (
+                    <span className="text-gray-600">Not Connected</span>
+                  )}
+                </p>
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-xl p-4 border border-blue-100 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Facebook className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Messenger</p>
-                  <p className="text-lg font-semibold text-gray-800">
-                    {messengerStatus.loading ? (
-                      <span className="text-gray-400">Checking...</span>
-                    ) : messengerStatus.connected ? (
-                      <span className="text-green-600">Connected</span>
-                    ) : (
-                      <span className="text-gray-600">Not Connected</span>
-                    )}
-                  </p>
-                </div>
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Facebook className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Messenger</p>
+                <p className="text-lg font-semibold text-gray-800">
+                  {messengerStatus.loading ? (
+                    <span className="text-gray-400">Checking...</span>
+                  ) : messengerStatus.connected ? (
+                    <span className="text-green-600">Connected</span>
+                  ) : (
+                    <span className="text-gray-600">Not Connected</span>
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-4 border border-green-100 shadow-sm">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <WhatsAppIcon className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">WhatsApp</p>
+                <p className="text-lg font-semibold text-gray-800">
+                  {whatsappStatus.loading ? (
+                    <span className="text-gray-400">Checking...</span>
+                  ) : whatsappStatus.connected ? (
+                    <span className="text-green-600">Connected</span>
+                  ) : (
+                    <span className="text-gray-600">Not Connected</span>
+                  )}
+                </p>
               </div>
             </div>
           </div>
@@ -643,6 +754,127 @@ const Channels: React.FC = () => {
           </div>
         </div>
 
+        {/* WhatsApp Connection Card */}
+        <div className="bg-white rounded-2xl shadow-md border border-green-100 overflow-hidden">
+          <div className="bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                <WhatsAppIcon className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-white">WhatsApp Business</h2>
+                <p className="text-sm text-green-100">Connect your WhatsApp Business account</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-5">
+            {whatsappStatus.loading ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-200 border-t-green-500"></div>
+                <p className="mt-4 text-gray-500">Checking connection status...</p>
+              </div>
+            ) : whatsappStatus.connected ? (
+              renderAccountInfo('whatsapp', whatsappStatus)
+            ) : showWhatsAppForm ? (
+              <form onSubmit={handleWhatsAppConnect} className="space-y-4 py-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number ID
+                  </label>
+                  <input
+                    type="text"
+                    value={whatsappForm.phone_number_id}
+                    onChange={e => setWhatsappForm(prev => ({ ...prev, phone_number_id: e.target.value }))}
+                    placeholder="e.g. 1104414602755661"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Access Token
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showToken ? 'text' : 'password'}
+                      value={whatsappForm.access_token}
+                      onChange={e => setWhatsappForm(prev => ({ ...prev, access_token: e.target.value }))}
+                      placeholder="Your WhatsApp Business access token"
+                      className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowToken(prev => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3 pt-2">
+                  <button
+                    type="submit"
+                    disabled={whatsappConnecting}
+                    className="inline-flex items-center space-x-2 px-6 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md text-sm font-medium"
+                  >
+                    {whatsappConnecting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <span>Connecting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Link2 className="w-4 h-4" />
+                        <span>Connect WhatsApp</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowWhatsAppForm(false); setWhatsappForm({ phone_number_id: '', access_token: '' }); }}
+                    className="inline-flex items-center space-x-1 px-4 py-2.5 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors text-sm"
+                  >
+                    <X className="w-4 h-4" />
+                    <span>Cancel</span>
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="text-center py-8">
+                <div className="w-24 h-24 mx-auto bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mb-4 shadow-lg">
+                  <WhatsAppIcon className="w-12 h-12 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  Connect your WhatsApp Business account
+                </h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  Enable automated messaging and engagement for your WhatsApp Business account
+                </p>
+                <button
+                  onClick={() => setShowWhatsAppForm(true)}
+                  className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all transform hover:scale-105 shadow-md"
+                >
+                  <Link2 className="w-5 h-5" />
+                  <span>Connect WhatsApp</span>
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </button>
+              </div>
+            )}
+
+            {whatsappStatus.error && (
+              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start space-x-3">
+                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-red-800">Connection Error</p>
+                  <p className="text-sm text-red-600">{whatsappStatus.error}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Help Section with Toggle */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <button
@@ -661,7 +893,7 @@ const Channels: React.FC = () => {
           {showHelp && (
             <div className="px-5 pb-5">
               <div className="border-t border-primary-100 pt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="space-y-3">
                     <h4 className="font-medium text-gray-800 flex items-center">
                       <Instagram className="w-4 h-4 mr-2 text-purple-500" />
@@ -700,6 +932,27 @@ const Channels: React.FC = () => {
                       <li className="flex items-start space-x-2">
                         <span className="text-blue-500 font-bold">•</span>
                         <span>Page must have messaging enabled</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-gray-800 flex items-center">
+                      <WhatsAppIcon className="w-4 h-4 mr-2 text-green-500" />
+                      WhatsApp Requirements
+                    </h4>
+                    <ul className="space-y-2 text-sm text-gray-600">
+                      <li className="flex items-start space-x-2">
+                        <span className="text-green-500 font-bold">•</span>
+                        <span>WhatsApp Business API access</span>
+                      </li>
+                      <li className="flex items-start space-x-2">
+                        <span className="text-green-500 font-bold">•</span>
+                        <span>Phone Number ID from Meta Business Suite</span>
+                      </li>
+                      <li className="flex items-start space-x-2">
+                        <span className="text-green-500 font-bold">•</span>
+                        <span>Permanent or long-lived access token</span>
                       </li>
                     </ul>
                   </div>
