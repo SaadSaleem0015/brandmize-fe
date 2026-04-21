@@ -41,6 +41,7 @@ import InstagramCallback from "./Pages/ChannelInstagram";
 import MessengerCallback from "./Pages/MessengerCallback";
 import ChatAssistant from "./Pages/ChatAssistant";
 import { AdminPhoneNumbers } from "./Pages/admin/AdminPhoneNumbers";
+import { AdminUsers } from "./Pages/admin/AdminUsers";
 
 const router = createBrowserRouter([
   {
@@ -205,6 +206,10 @@ const router = createBrowserRouter([
       {
         path: "phone-numbers",
         element: <ErrorBoundary><AdminPhoneNumbers /></ErrorBoundary>,
+      },
+            {
+        path: "users",
+        element: <ErrorBoundary><AdminUsers /></ErrorBoundary>,
       },
     ],
   },

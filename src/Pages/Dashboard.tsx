@@ -47,6 +47,7 @@ import {
   Legend
 } from "recharts";
 import { format, subDays, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
+import { api } from "../Helpers/BackendRequest";
 
 // Types
 interface DashboardStats {
@@ -100,76 +101,91 @@ export function Dashboard() {
   const [callHistory, setCallHistory] = useState<CallData[]>([]);
   const [callDistribution, setCallDistribution] = useState<CallTypeData[]>([]);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data generation
+  // Fetch data from backend APIs
   useEffect(() => {
-    const generateMockData = () => {
-      // Generate dates based on time range
-      const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
-      const dates = Array.from({ length: days }, (_, i) => {
-        const date = subDays(new Date(), days - 1 - i);
-        return format(date, 'yyyy-MM-dd');
-      });
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      // Generate call history
-      const history = dates.map(date => {
-        const totalCalls = Math.floor(Math.random() * 50) + 20;
-        const answered = Math.floor(totalCalls * (0.6 + Math.random() * 0.3));
-        const missed = totalCalls - answered;
-        const avgDuration = Math.floor(Math.random() * 180) + 60; // 1-4 minutes in seconds
-        
-        return {
-          date: format(new Date(date), 'MMM dd'),
-          calls: totalCalls,
-          answered,
-          missed,
-          duration: avgDuration * totalCalls / 60 // total minutes
-        };
-      });
+        // Fetch general statistics
+        const statsResponse = await api.get("/user/statistics");
+        const statsData = statsResponse.data;
 
-      // Calculate totals
-      const totalCalls = history.reduce((sum, day) => sum + day.calls, 0);
-      const totalMinutes = history.reduce((sum, day) => sum + day.duration, 0);
-      const answeredCalls = history.reduce((sum, day) => sum + day.answered, 0);
-      const missedCalls = history.reduce((sum, day) => sum + day.missed, 0);
+        // Fetch detailed call statistics based on time range
+        const callDetailsResponse = await api.get("/user/statistics/calls", {
+          params: { period: timeRange }
+        });
+        const callDetails = callDetailsResponse.data.daily_statistics;
 
-      // Call type distribution
-      const distribution = [
-        { name: 'Answered', value: answeredCalls, color: '#22c55e' },
-        { name: 'Missed', value: missedCalls, color: '#ef4444' },
-        { name: 'Voicemail', value: Math.floor(totalCalls * 0.1), color: '#f59e0b' }
-      ];
+        // Fetch leads statistics
+        const leadsResponse = await api.get("/user/statistics/leads");
+        const leadsData = leadsResponse.data;
 
-      // Recent activity
-      const activity = Array.from({ length: 10 }, (_, i) => ({
-        id: i,
-        type: ['call', 'lead', 'assistant'][Math.floor(Math.random() * 3)],
-        status: ['completed', 'missed', 'qualified'][Math.floor(Math.random() * 3)],
-        name: ['John Doe', 'Jane Smith', 'Mike Johnson', 'Sarah Williams'][Math.floor(Math.random() * 4)],
-        time: `${Math.floor(Math.random() * 60)} minutes ago`,
-        duration: Math.floor(Math.random() * 300) + 30,
-        channel: ['Phone', 'WhatsApp', 'SMS'][Math.floor(Math.random() * 3)]
-      }));
+        // Transform call history data
+        const history: CallData[] = callDetails.map((day: any) => {
+          const dateObj = new Date(day.date);
+          return {
+            date: format(dateObj, 'MMM dd'),
+            calls: day.call_count,
+            answered: Math.ceil(day.call_count * 0.75), // Estimate based on typical conversion
+            missed: Math.floor(day.call_count * 0.25),
+            duration: day.total_duration_minutes || 0
+          };
+        });
 
-      setStats({
-        totalCalls,
-        totalMinutes: Math.round(totalMinutes),
-        avgCallDuration: Math.round(totalMinutes * 60 / totalCalls),
-        answeredCalls,
-        missedCalls,
-        connectedChannels: 4,
-        totalLeads: 2347,
-        qualifiedLeads: 892,
-        activeAssistants: 3
-      });
+        // Calculate totals from call history
+        const totalCalls = history.reduce((sum, day) => sum + day.calls, 0);
+        const totalMinutes = history.reduce((sum, day) => sum + day.duration, 0);
+        const answeredCalls = history.reduce((sum, day) => sum + day.answered, 0);
+        const missedCalls = history.reduce((sum, day) => sum + day.missed, 0);
 
-      setCallHistory(history);
-      setCallDistribution(distribution);
-      setRecentActivity(activity);
-      setLoading(false);
+        // Call type distribution
+        const distribution = [
+          { name: 'Answered', value: answeredCalls, color: '#22c55e' },
+          { name: 'Missed', value: missedCalls, color: '#ef4444' },
+          { name: 'Voicemail', value: Math.floor(totalCalls * 0.1), color: '#f59e0b' }
+        ];
+
+        // Transform leads data for recent activity
+        const activity = leadsData.leads.slice(0, 10).map((lead: any, index: number) => ({
+          id: index,
+          type: 'lead',
+          status: lead.call_count > 0 ? 'completed' : 'qualified',
+          name: lead.name,
+          time: lead.last_called_at 
+            ? `${Math.floor((Date.now() - new Date(lead.last_called_at).getTime()) / (1000 * 60))} minutes ago`
+            : 'Not yet contacted',
+          duration: 0,
+          channel: 'Phone'
+        }));
+
+        setStats({
+          totalCalls,
+          totalMinutes: Math.round(totalMinutes),
+          avgCallDuration: totalCalls > 0 ? Math.round((totalMinutes * 60) / totalCalls) : 0,
+          answeredCalls,
+          missedCalls,
+          connectedChannels: statsData.connected_channels.total,
+          totalLeads: leadsData.total_leads,
+          qualifiedLeads: Math.ceil(leadsData.total_leads * 0.38), // Estimate conversion rate
+          activeAssistants: 3 // Can be fetched from a separate endpoint if needed
+        });
+
+        setCallHistory(history);
+        setCallDistribution(distribution);
+        setRecentActivity(activity);
+      } catch (err: any) {
+        console.error("Error fetching dashboard data:", err);
+        setError(err.message || "Failed to fetch dashboard data");
+      } finally {
+        setLoading(false);
+      }
     };
 
-    generateMockData();
+    fetchDashboardData();
   }, [timeRange]);
 
   // Channel data
@@ -183,6 +199,78 @@ export function Dashboard() {
   ];
 
   const activeChannels = channels.filter(c => c.active);
+
+  // Refresh handler
+  const handleRefresh = async () => {
+    setLoading(true);
+    try {
+      const statsResponse = await api.get("/user/statistics");
+      const callDetailsResponse = await api.get("/user/statistics/calls", {
+        params: { period: timeRange }
+      });
+      const leadsResponse = await api.get("/user/statistics/leads");
+
+      const statsData = statsResponse.data;
+      const callDetails = callDetailsResponse.data.daily_statistics;
+      const leadsData = leadsResponse.data;
+
+      const history: CallData[] = callDetails.map((day: any) => {
+        const dateObj = new Date(day.date);
+        return {
+          date: format(dateObj, 'MMM dd'),
+          calls: day.call_count,
+          answered: Math.ceil(day.call_count * 0.75),
+          missed: Math.floor(day.call_count * 0.25),
+          duration: day.total_duration_minutes || 0
+        };
+      });
+
+      const totalCalls = history.reduce((sum, day) => sum + day.calls, 0);
+      const totalMinutes = history.reduce((sum, day) => sum + day.duration, 0);
+      const answeredCalls = history.reduce((sum, day) => sum + day.answered, 0);
+      const missedCalls = history.reduce((sum, day) => sum + day.missed, 0);
+
+      const distribution = [
+        { name: 'Answered', value: answeredCalls, color: '#22c55e' },
+        { name: 'Missed', value: missedCalls, color: '#ef4444' },
+        { name: 'Voicemail', value: Math.floor(totalCalls * 0.1), color: '#f59e0b' }
+      ];
+
+      const activity = leadsData.leads.slice(0, 10).map((lead: any, index: number) => ({
+        id: index,
+        type: 'lead',
+        status: lead.call_count > 0 ? 'completed' : 'qualified',
+        name: lead.name,
+        time: lead.last_called_at 
+          ? `${Math.floor((Date.now() - new Date(lead.last_called_at).getTime()) / (1000 * 60))} minutes ago`
+          : 'Not yet contacted',
+        duration: 0,
+        channel: 'Phone'
+      }));
+
+      setStats({
+        totalCalls,
+        totalMinutes: Math.round(totalMinutes),
+        avgCallDuration: totalCalls > 0 ? Math.round((totalMinutes * 60) / totalCalls) : 0,
+        answeredCalls,
+        missedCalls,
+        connectedChannels: statsData.connected_channels.total,
+        totalLeads: leadsData.total_leads,
+        qualifiedLeads: Math.ceil(leadsData.total_leads * 0.38),
+        activeAssistants: 3
+      });
+
+      setCallHistory(history);
+      setCallDistribution(distribution);
+      setRecentActivity(activity);
+      setError(null);
+    } catch (err: any) {
+      console.error("Error refreshing data:", err);
+      setError(err.message || "Failed to refresh data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Custom tooltip styles
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -211,6 +299,23 @@ export function Dashboard() {
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-8 h-8 bg-primary-600 rounded-full animate-pulse"></div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
+          <h3 className="text-lg font-semibold text-red-900 mb-2">Error Loading Dashboard</h3>
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -247,8 +352,12 @@ export function Dashboard() {
             ))}
           </div>
           
-          <button className="p-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
-            <TbRefresh className="w-5 h-5 text-gray-600" />
+          <button 
+            onClick={handleRefresh}
+            disabled={loading}
+            className="p-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
+          >
+            <TbRefresh className={`w-5 h-5 text-gray-600 ${loading ? 'animate-spin' : ''}`} />
           </button>
           
           <button className="p-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
@@ -295,25 +404,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* Answer Rate */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Answer Rate</p>
-              <h3 className="text-3xl font-bold text-gray-900 mt-1">
-                {Math.round((stats.answeredCalls / stats.totalCalls) * 100)}%
-              </h3>
-            </div>
-            <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
-              <TbPhoneCheck className="w-6 h-6 text-green-600" />
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-green-600">{stats.answeredCalls} answered</span>
-            <span className="text-gray-400">•</span>
-            <span className="text-red-600">{stats.missedCalls} missed</span>
-          </div>
-        </div>
+    
 
         {/* Qualified Leads */}
         <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all">

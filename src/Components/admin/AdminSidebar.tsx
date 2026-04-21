@@ -252,14 +252,14 @@ export function AdminSidebar({
         </SidebarItem>
 
         {/* Settings */}
-        <SidebarItem
+        {/* <SidebarItem
           to={menuItems.settings.path}
           icon={menuItems.settings.icon}
           isCollapsed={sidebarCollapsed}
           onClick={handleMobileMenuClose}
         >
           {menuItems.settings.title}
-        </SidebarItem>
+        </SidebarItem> */}
       </div>
 
       {/* Bottom Section - Admin Info */}

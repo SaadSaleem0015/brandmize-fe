@@ -11,7 +11,7 @@ const GetNumbers: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 ">
+      <div className="w-full mx-auto px-4 ">
         <button
           type="button"
           onClick={() => navigate("/dashboard")}
@@ -67,6 +67,9 @@ const GetNumbers: React.FC = () => {
                 </h2>
                 <p className="text-gray-600">
                   Search for phone numbers in your desired area. Click "Purchase" to buy instantly.
+                </p>
+                   <p className="text-green-700 font-bold mt-2">
+                 The monthly fee for each number is $5.00 only, which will be billed to your account. You can manage your numbers in the "My Numbers" tab.
                 </p>
               </div>
               
