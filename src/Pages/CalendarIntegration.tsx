@@ -71,7 +71,7 @@ export default function CalendarIntegration() {
           setIsConnected(false);
         }
       } catch (error) {
-        console.error("Error fetching Cal.com status:", error);
+        console.error("Error fetching cal.eu status:", error);
       } finally {
         setChecking(false);
       }
@@ -106,7 +106,7 @@ export default function CalendarIntegration() {
 
   const handleFetch = async () => {
     if (!calComApiKey.trim()) {
-      notifyResponse({ success: false, detail: "Please enter your Cal.com API key" });
+      notifyResponse({ success: false, detail: "Please enter your cal.eu API key" });
       return;
     }
     setFetching(true);
@@ -128,7 +128,7 @@ export default function CalendarIntegration() {
         notifyResponse((data as { success?: boolean; detail?: string }) ?? { success: false, detail: "Failed to fetch event types" });
       }
     } catch (error) {
-      console.error("Error fetching Cal.com data:", error);
+      console.error("Error fetching cal.eu data:", error);
       notifyResponse({ success: false, detail: "Failed to fetch event types" });
     } finally {
       setFetching(false);
@@ -137,7 +137,7 @@ export default function CalendarIntegration() {
 
   const handleIntegrate = async () => {
     if (!calComApiKey.trim()) {
-      notifyResponse({ success: false, detail: "Please enter your Cal.com API key" });
+      notifyResponse({ success: false, detail: "Please enter your cal.eu API key" });
       return;
     }
     if (!selectedEventType) {
@@ -185,7 +185,7 @@ export default function CalendarIntegration() {
         const { confirmed } = data;
         const parts: string[] = [`Event type: ${confirmed.slug}`];
         if (confirmed.timeZone) parts.push(`Timezone: ${confirmed.timeZone}`);
-        notyf.success(`Cal.com integrated successfully! ${parts.join(" • ")}`);
+        notyf.success(`cal.eu integrated successfully! ${parts.join(" • ")}`);
         setIsChangeMode(false);
         setCalComApiKey("");
         setEventTypes([]);
@@ -214,7 +214,7 @@ export default function CalendarIntegration() {
       </button>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">
-          Calendar Integration (Cal.com)
+          Calendar Integration (cal.eu)
         </h1>
         {!checking && (
           <span
@@ -278,7 +278,7 @@ export default function CalendarIntegration() {
               className="w-full flex items-center justify-between px-5 py-4 text-left font-semibold text-gray-800 hover:bg-gray-50 transition-colors"
             >
               <span className="flex items-center gap-2">
-                Cal.com setup guide
+                cal.eu setup guide
                 <a
                   href="https://cal.com/docs/api-reference/v2/introduction"
                   target="_blank"
@@ -296,9 +296,9 @@ export default function CalendarIntegration() {
               <div className="px-5 pb-5 pt-0 text-sm text-gray-700 space-y-5 border-t border-gray-100">
                 {/* Step 1: API Key */}
                 <section>
-                  <h3 className="font-semibold text-gray-800 mb-2">1. Get your Cal.com API key</h3>
+                  <h3 className="font-semibold text-gray-800 mb-2">1. Get your cal.eu API key</h3>
                   <ol className="list-decimal list-inside space-y-1.5 text-gray-600">
-                    <li>Sign in at <a href="https://cal.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">cal.com</a></li>
+                    <li>Sign in at <a href="https://cal.eu" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">cal.eu</a></li>
                     <li>Go to <strong>Settings → Security</strong> (or Developers)</li>
                     <li>Find <strong>API Keys</strong> → <strong>Create New API Key</strong></li>
                     <li>Name it (e.g. &quot;Helios Integration&quot;), set expiration (recommended: Never), click <strong>Save</strong></li>
@@ -310,7 +310,7 @@ export default function CalendarIntegration() {
                 <section>
                   <h3 className="font-semibold text-gray-800 mb-2">2. Set your availability</h3>
                   <p className="text-gray-600">
-                    After creating the API key, go back in Cal.com, click <strong>Availability</strong> in the sidebar and set your working hours so bookings are flawless.
+                    After creating the API key, go back in cal.eu, click <strong>Availability</strong> in the sidebar and set your working hours so bookings are flawless.
                   </p>
                 </section>
 
@@ -340,18 +340,18 @@ export default function CalendarIntegration() {
                     </li>
                     <li>Click <strong>Save</strong></li>
                   </ol>
-                  <p className="text-gray-600 mt-2 font-medium text-green-700">That’s it for Cal.com. No other settings are required.</p>
+                  <p className="text-gray-600 mt-2 font-medium text-green-700">That’s it for cal.eu. No other settings are required.</p>
                 </section>
 
                 {/* Integrate here */}
                 <section className="rounded-lg bg-primary/5 border border-primary/20 p-4">
-                  <h3 className="font-semibold text-gray-800 mb-2">How to integrate Cal.com here</h3>
+                  <h3 className="font-semibold text-gray-800 mb-2">How to integrate cal.eu here</h3>
                   <ol className="list-decimal list-inside space-y-1.5 text-gray-600">
-                    <li>Paste your Cal.com API key in the field below</li>
+                    <li>Paste your cal.eu API key in the field below</li>
                     <li>Click <strong>Fetch Events &amp; Timezone</strong></li>
                     <li>Select the <strong>event type</strong> you want to use from the dropdown</li>
                     <li>Select the <strong>timezone</strong> you want to use for bookings</li>
-                    <li>Click <strong>Connect Cal.com</strong> or <strong>Update Integration</strong></li>
+                    <li>Click <strong>Connect cal.eu</strong> or <strong>Update Integration</strong></li>
                   </ol>
                 </section>
               </div>
@@ -360,7 +360,7 @@ export default function CalendarIntegration() {
 
           {/* API Key Input */}
           <div className="mb-6">
-            <label className="block mb-2 text-sm font-medium text-gray-700">Cal.com API Key</label>
+            <label className="block mb-2 text-sm font-medium text-gray-700">cal.eu API Key</label>
             <div className="flex gap-2 flex-wrap">
               <input
                 type="password"
@@ -425,7 +425,7 @@ export default function CalendarIntegration() {
                 </select>
                 {apiTimezone && (
                   <p className="mt-1 text-xs text-gray-500">
-                    Your Cal.com timezone ({apiTimezone}) is auto-selected. You can change it above.
+                    Your cal.eu timezone ({apiTimezone}) is auto-selected. You can change it above.
                   </p>
                 )}
               </div>
@@ -439,14 +439,14 @@ export default function CalendarIntegration() {
                     : "bg-primary-400 text-white hover:bg-primary-600"
                 }`}
               >
-                {integrating ? "Updating..." : isChangeMode ? "Update Integration" : "Connect Cal.com"}
+                {integrating ? "Updating..." : isChangeMode ? "Update Integration" : "Connect cal.eu"}
               </button>
             </div>
           )}
 
           {eventTypes.length === 0 && !fetching && (
             <p className="text-sm text-gray-500">
-              Enter your Cal.com API key and click &quot;Fetch Events &amp; Timezone&quot; to get
+              Enter your cal.eu API key and click &quot;Fetch Events &amp; Timezone&quot; to get
               started.
             </p>
           )}
